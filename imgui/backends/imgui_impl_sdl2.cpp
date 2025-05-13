@@ -94,7 +94,7 @@
 //  2017-08-25: Inputs: MousePos set to -FLT_MAX,-FLT_MAX when mouse is unavailable/missing (instead of -1,-1).
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
 
-#include "../imgui.h"
+#include "imgui.h"
 #ifndef IMGUI_DISABLE
 #include "imgui_impl_sdl2.h"
 
@@ -105,8 +105,8 @@
 #endif
 
 // SDL
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_syswm.h>
+#include "../../SDL2/SDL.h"
+#include "../../SDL2/SDL_syswm.h"
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #endif
@@ -122,7 +122,7 @@
 #define SDL_HAS_VULKAN                      SDL_VERSION_ATLEAST(2,0,6)
 #define SDL_HAS_OPEN_URL                    SDL_VERSION_ATLEAST(2,0,14)
 #if SDL_HAS_VULKAN
-#include <SDL2/SDL_vulkan.h>
+#include <SDL_vulkan.h>
 #endif
 
 // SDL Data

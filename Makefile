@@ -1,29 +1,39 @@
 #
 # Cross Platform Makefile
-# Compatible with MSYS2/MINGW, Ubuntu 14.04.1 and Mac OS X
+# Compatible with Windows 10, ~Ubuntu 14.04.1 and Mac OS X~
 #
-# You will need SDL2 (http://www.libsdl.org):
+## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# YOU WILL NEED SDL2 (http://www.libsdl.org)
+# You can download it via vcpkg in VS Code terminal:
+# https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-vscode?pivots=shell-powershell
+#
+## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# To run project:
 # Linux:
-#   apt-get install libsdl2-dev
 # Mac OS X:
-#   brew install sdl2
-# MSYS2:
-#   pacman -S mingw-w64-i686-SDL2
-#
+# UCRT64: (C:\msys64\ucrt64.exe)
+#   cd your\\project\\folder
+#   make
 
-#CXX = g++
+CXX = g++
 #CXX = clang++
 
 EXE = Release/example_sdl2_sdlrenderer2
 IMGUI_DIR = imgui
+SDL2_DIR = SDL2
 SOURCES = main.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer2.cpp
 OBJS = Release/$(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
-CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
-CXXFLAGS += -g -Wall -Wformat
+CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(SDL2_DIR)
+## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Use this line for debug vvvvv
+CXXFLAGS += -g -Wall -W -Wshadow -Wformat
+# Use this line for release vvvvv
+CXXFLAGS += -Ofast -fno-rtti -flto -ffunction-sections -fdata-sections
+## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 LIBS =
 
 ##---------------------------------------------------------------------
@@ -48,7 +58,7 @@ ifeq ($(UNAME_S), Darwin) #APPLE
 	CFLAGS = $(CXXFLAGS)
 endif
 
-ifeq ($(OS), Windows_NT)
+ifeq ($(OS), Windows_NT) #WINDOWS
 	ECHO_MESSAGE = "MinGW"
 	LIBS += -lgdi32 -lopengl32 -limm32 `pkg-config --static --libs sdl2`
 
