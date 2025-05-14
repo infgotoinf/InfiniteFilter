@@ -2,12 +2,6 @@
 # Cross Platform Makefile
 # Compatible with Windows 10, ~Ubuntu 14.04.1 and Mac OS X~
 #
-## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# YOU WILL NEED SDL2 (http://www.libsdl.org)
-# You can download it via vcpkg in VS Code terminal:
-# https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-vscode?pivots=shell-powershell
-#
-## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # To run project:
 # Linux:
 # Mac OS X:
