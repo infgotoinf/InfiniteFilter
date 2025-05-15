@@ -105,8 +105,8 @@
 #endif
 
 // SDL
-#include "../../SDL2/SDL.h"
-#include "../../SDL2/SDL_syswm.h"
+#include "../../SDL2/include/SDL.h"
+#include "../../SDL2/include/SDL_syswm.h"
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #endif
