@@ -7,6 +7,7 @@
 #   UCRT64: (C:\msys64\ucrt64.exe)
 #     cd your\\project\\folder
 #
+# To make this programm you need libstdc++ libgcc and lwinpthread
 # make build=debug
 #        OR
 # make build=release
@@ -36,7 +37,7 @@ DEBUG_CXXFLAGS   = -g -Wall -W -Wshadow -Wformat
 LDFLAGS = -L$(SDL2_DIR)/lib \
           -lmingw32 -lSDL2main -lSDL2 \
           -Wl,--dynamicbase -Wl,--nxcompat \
-		  -static-libstdc++ -static-libgcc -lwinpthread \
+		      -static-libstdc++ -static-libgcc -static -lwinpthread \
           -lsetupapi -lhid -lwinmm -limm32 -lole32 -loleaut32 -lversion \
           -luuid -lgdi32 -lopengl32 -lbcrypt
 
