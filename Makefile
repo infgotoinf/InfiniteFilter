@@ -10,7 +10,7 @@
 # To make this programm you need libstdc++ libgcc and lwinpthread
 # make build=debug
 #        OR
-# make build=release
+# make build=release (after building a release I compress it via UPX https://github.com/upx/upx)
 # 
 # Use 'make clean' to clean build folder
 
@@ -25,21 +25,27 @@ SDL2_DIR  = ./SDL2
 BUILD_DIR = ./build
 
 SOURCES := main.cpp
-SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
+SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp \
+           $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer2.cpp
 SOURCES := $(basename $(notdir $(SOURCES)))
 OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
 EXISTING_EXE := $(basename $(notdir $(shell find $(BUILD_DIR) -name '*.exe')))
 
-CXXFLAGS         = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(SDL2_DIR)/include
-RELEASE_CXXFLAGS = -Ofast -fno-rtti -flto -ffunction-sections -fdata-sections -Wl,--gc-sections
-DEBUG_CXXFLAGS   = -g -Wall -W -Wshadow -Wformat
+CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(SDL2_DIR)/include
+RELEASE_CXXFLAGS = -g0 -O3 -DNDEBUG -flto -fno-rtti -fno-exceptions -ffunction-sections \
+                   -fdata-sections -Wl,--gc-sections -fvisibility=hidden -fomit-frame-pointer \
+                   -funroll-loops -fstrict-aliasing -fipa-pta -ftree-vectorize \
+                   -fno-semantic-interposition -Wl,-O3 -Wl,--relax -Wl,--strip-all -mfpmath=both \
+                   -mbranch-cost=2 -fno-stack-protector -fno-unwind-tables # There are hell-a-lot-of stuff
+DEBUG_CXXFLAGS = -g3 -O0 -Wall -Wextra -Wpedantic -Wshadow -Wformat=2 -Wundef \
+                 -fno-omit-frame-pointer -fno-inline -fno-common \
+                 -Wcast-qual -Wduplicated-cond -Wlogical-op
 LDFLAGS = -L$(SDL2_DIR)/lib \
           -lmingw32 -lSDL2main -lSDL2 \
           -Wl,--dynamicbase -Wl,--nxcompat \
 		      -static-libstdc++ -static-libgcc -static -lwinpthread \
-          -lsetupapi -lhid -lwinmm -limm32 -lole32 -loleaut32 -lversion \
-          -luuid -lgdi32 -lopengl32 -lbcrypt
+          -lsetupapi -lhid -lwinmm -limm32 -lole32 -loleaut32 -lversion
 
 ##---------------------------------------------------------------------
 ## DEBUG AND RELEASE REALISATION
