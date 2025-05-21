@@ -269,7 +269,7 @@ int main(int, char**)
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
                     switch (language){
-                        case RUS: return u8"Исправить";
+                        case RUS: return u8"Правка";
                         case ENG:
                         default: return "Edit";
                     }
@@ -292,14 +292,57 @@ int main(int, char**)
                     }
                 }(), "Ctrl+Shift+Z", false, false)) {} // Disabled item
                 ImGui::Separator();
-                if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
-                if (ImGui::MenuItem("Copy", "Ctrl+C")) {}
-                if (ImGui::MenuItem("Paste", "Ctrl+V")) {}
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Вырезать";
+                        case ENG:
+                        default: return "Cut";
+                    }
+                }(), "Ctrl+X")) {}
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Копировать";
+                        case ENG:
+                        default: return "Copy";
+                    }
+                }(), "Ctrl+C")) {}
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Вставить";
+                        case ENG:
+                        default: return "Paste";
+                    }
+                }(), "Ctrl+V")) {}
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Settings"))
+            if (ImGui::BeginMenu(
+                [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Настройки";
+                        case ENG:
+                        default: return "Settings";
+                    }
+                }()))
             {
-                if (ImGui::BeginMenu("Language"))
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Настройка";
+                        case ENG:
+                        default: return "Configuration";
+                    }
+                }())) {}
+                if (ImGui::BeginMenu(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Язык";
+                        case ENG:
+                        default: return "Language";
+                    }
+                }()))
                 {
                     if (ImGui::MenuItem("English")) {
                         language = 0;
@@ -309,16 +352,50 @@ int main(int, char**)
                     }
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Settings")) {}
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Help"))
+            if (ImGui::BeginMenu(
+                [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Помощь";
+                        case ENG:
+                        default: return "Help";
+                    }
+                }()))
             {
-                if (ImGui::MenuItem("Documentation")) {}
-                if (ImGui::MenuItem("Report a bug")) {}
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Документация";
+                        case ENG:
+                        default: return "Documentation";
+                    }
+                }())) {}
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Сообщить об ошибке";
+                        case ENG:
+                        default: return "Report a bug";
+                    }
+                }())) {}
                 ImGui::Separator();
-                if (ImGui::MenuItem("Credits")) {}
-                if (ImGui::Checkbox("Demo Window", &show_demo_window)) {}
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"О программе";
+                        case ENG:
+                        default: return "Credits";
+                    }
+                }())) {}
+                if (ImGui::Checkbox(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Тестировочное окно";
+                        case ENG:
+                        default: return "Demo Window";
+                    }
+                }(), &show_demo_window)) {}
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
