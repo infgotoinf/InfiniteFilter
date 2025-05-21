@@ -20,14 +20,36 @@
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
 #endif
 
+enum Languages {ENG, RUS};
 
-
+int language = ENG;
 
 static void ShowExampleMenuFile()
 {
-    if (ImGui::MenuItem("New..", "Ctrl+N")) {}
-    if (ImGui::MenuItem("Open..", "Ctrl+O")) {}
-    if (ImGui::BeginMenu("Open Recent"))
+    if (ImGui::MenuItem(
+        [&]() -> const char* {
+            switch (language){
+                case RUS: return u8"Новый..";
+                case ENG:
+                default: return "New..";
+            }
+        }(), "Ctrl+N")) {}
+    if (ImGui::MenuItem(
+        [&]() -> const char* {
+            switch (language){
+                case RUS: return u8"Открыть..";
+                case ENG:
+                default: return "Open..";
+            }
+        }(), "Ctrl+O")) {}
+    if (ImGui::BeginMenu(
+        [&]() -> const char* {
+            switch (language){
+                case RUS: return u8"Открыть Новый..";
+                case ENG:
+                default: return "Open Recent..";
+            }
+        }()))
     {
         ImGui::MenuItem("fish_hat.c");
         ImGui::MenuItem("fish_hat.inl");
@@ -45,8 +67,22 @@ static void ShowExampleMenuFile()
         // }
         ImGui::EndMenu();
     }
-    if (ImGui::MenuItem("Save", "Ctrl+S")) {}
-    if (ImGui::MenuItem("Save As..", "Ctrl+Shift+S")) {}
+    if (ImGui::MenuItem(
+        [&]() -> const char* {
+            switch (language){
+                case RUS: return u8"Сохранить";
+                case ENG:
+                default: return "Save";
+            }
+        }(), "Ctrl+S")) {}
+    if (ImGui::MenuItem(
+        [&]() -> const char* {
+            switch (language){
+                case RUS: return u8"Сохранить Как..";
+                case ENG:
+                default: return "Save As..";
+            }
+        }(), "Ctrl+Shift+S")) {}
 
     ImGui::Separator();
     // if (ImGui::BeginMenu("Options"))
@@ -95,7 +131,14 @@ static void ShowExampleMenuFile()
     // }
     // if (ImGui::MenuItem("Checked", NULL, true)) {}
     // ImGui::Separator();
-    if (ImGui::MenuItem("Quit", "Alt+F4")) {}
+    if (ImGui::MenuItem(
+        [&]() -> const char* {
+            switch (language){
+                case RUS: return u8"Выйти";
+                case ENG:
+                default: return "Quit";
+            }
+        }(), "Alt+F4")) {}
 }
 
 
@@ -139,6 +182,7 @@ int main(int, char**)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImFontConfig config;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
@@ -166,7 +210,15 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
 
+    ImVector<ImWchar> ranges;
+    ImFontGlyphRangesBuilder builder;
+    builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+    builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
+    builder.BuildRanges(&ranges);
+    io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 15.0f, nullptr, ranges.Data);
+
     // Our state
+    bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // Main loop
@@ -202,15 +254,43 @@ int main(int, char**)
 
             if (ImGui::BeginMainMenuBar())
         {
-            if (ImGui::BeginMenu("File"))
+            if (ImGui::BeginMenu(
+                [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Файл";
+                        case ENG:
+                        default: return "File";
+                    }
+                }()))
             {
                 ShowExampleMenuFile();
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Edit"))
+            if (ImGui::BeginMenu(
+                [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Исправить";
+                        case ENG:
+                        default: return "Edit";
+                    }
+                }()))
             {
-                if (ImGui::MenuItem("Undo", "Ctrl+Z")) {}
-                if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z", false, false)) {} // Disabled item
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Отменить";
+                        case ENG:
+                        default: return "Undo";
+                    }
+                }(), "Ctrl+Z")) {}
+                if (ImGui::MenuItem(
+                    [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Повторить";
+                        case ENG:
+                        default: return "Redo";
+                    }
+                }(), "Ctrl+Shift+Z", false, false)) {} // Disabled item
                 ImGui::Separator();
                 if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
                 if (ImGui::MenuItem("Copy", "Ctrl+C")) {}
@@ -219,6 +299,16 @@ int main(int, char**)
             }
             if (ImGui::BeginMenu("Settings"))
             {
+                if (ImGui::BeginMenu("Language"))
+                {
+                    if (ImGui::MenuItem("English")) {
+                        language = 0;
+                    }
+                    if (ImGui::MenuItem(u8"Русский")){
+                        language = 1;
+                    }
+                    ImGui::EndMenu();
+                }
                 if (ImGui::MenuItem("Settings")) {}
                 ImGui::EndMenu();
             }
@@ -227,36 +317,14 @@ int main(int, char**)
                 if (ImGui::MenuItem("Documentation")) {}
                 if (ImGui::MenuItem("Report a bug")) {}
                 ImGui::Separator();
-                if (ImGui::MenuItem("About the author")) {}
+                if (ImGui::MenuItem("Credits")) {}
+                if (ImGui::Checkbox("Demo Window", &show_demo_window)) {}
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
 
             if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-            ImGui::End();
-        }
+                ImGui::ShowDemoWindow(&show_demo_window);
         }
 
 //*************************************************************************************************************************
