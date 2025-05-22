@@ -8,7 +8,7 @@
 #     cd your\\project\\folder
 #
 # To make this programm for windows you need libstdc++, libgcc and lwinpthread,
-# freetype, libpng, harfbuzz, brotli, bzip2, graphite2 (use UCRT64 to download them)
+# freetype, libpng, harfbuzz, brotli, bzip2, graphite2 (use UCRT64 to download them 'pacman -S mingw-w64-ucrt-x86_64-LIBNAME')
 # make build=debug
 #        OR
 # make build=release (after building a release I compress it via UPX https://github.com/upx/upx)
@@ -35,7 +35,7 @@ SOURCES := $(basename $(notdir $(SOURCES)))
 OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
 EXISTING_EXE := $(basename $(notdir $(shell find $(BUILD_DIR) -name '*.exe')))
 
-CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(SDL2_DIR)/include \
+CXXFLAGS = -std=c++11 -I./ -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(SDL2_DIR)/include \
            -I$(IMGUI_DIR)/misc/freetype -I$(FREETYPE_DIR)/include/freetype2 -I$(FREETYPE_DIR)/include/freetype2/freetype -I$(FREETYPE_DIR)/include/freetype2/freetype/config
 RELEASE_CXXFLAGS = -g0 -O3 -DNDEBUG -flto -fno-rtti -fno-exceptions -ffunction-sections \
                    -fdata-sections -Wl,--gc-sections -fvisibility=hidden -fomit-frame-pointer \

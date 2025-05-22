@@ -9,7 +9,9 @@
 
 // Important to understand: SDL_Renderer is an _optional_ component of SDL2.
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
-
+#define _CRT_SECURE_NO_WARNINGS
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_sdl2.h"
 #include "imgui/backends/imgui_impl_sdlrenderer2.h"
@@ -24,7 +26,70 @@ enum Languages {ENG, RUS};
 
 int language = ENG;
 
-static void ShowExampleMenuFile()
+
+
+
+
+
+bool LoadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* renderer, SDL_Texture** out_texture, int* out_width, int* out_height)
+{
+    int image_width = 0;
+    int image_height = 0;
+    int channels = 4;
+    unsigned char* image_data = stbi_load_from_memory((const unsigned char*)data, (int)data_size, &image_width, &image_height, NULL, 4);
+    if (image_data == nullptr)
+    {
+        fprintf(stderr, "Failed to load image: %s\n", stbi_failure_reason());
+        return false;
+    }
+
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)image_data, image_width, image_height, channels * 8, channels * image_width, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+    if (surface == nullptr)
+    {
+        fprintf(stderr, "Failed to create SDL surface: %s\n", SDL_GetError());
+        return false;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (texture == nullptr)
+        fprintf(stderr, "Failed to create SDL texture: %s\n", SDL_GetError());
+
+    *out_texture = texture;
+    *out_width = image_width;
+    *out_height = image_height;
+
+    SDL_FreeSurface(surface);
+    stbi_image_free(image_data);
+
+    return true;
+}
+
+// Open and read a file, then forward to LoadTextureFromMemory()
+bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture, int* out_width, int* out_height)
+{
+    FILE* f = fopen(file_name, "rb");
+    if (f == NULL)
+        return false;
+    fseek(f, 0, SEEK_END);
+    size_t file_size = (size_t)ftell(f);
+    if (file_size == -1)
+        return false;
+    fseek(f, 0, SEEK_SET);
+    void* file_data = IM_ALLOC(file_size);
+    fread(file_data, 1, file_size, f);
+    fclose(f);
+    bool ret = LoadTextureFromMemory(file_data, file_size, renderer, out_texture, out_width, out_height);
+    IM_FREE(file_data);
+    return ret;
+}
+
+
+
+
+
+
+
+static void ShowFileMenu()
 {
     if (ImGui::MenuItem(
         [&]() -> const char* {
@@ -54,17 +119,6 @@ static void ShowExampleMenuFile()
         ImGui::MenuItem("fish_hat.c");
         ImGui::MenuItem("fish_hat.inl");
         ImGui::MenuItem("fish_hat.h");
-        // if (ImGui::BeginMenu("More.."))
-        // {
-        //     ImGui::MenuItem("Hello");
-        //     ImGui::MenuItem("Sailor");
-        //     if (ImGui::BeginMenu("Recurse.."))
-        //     {
-        //         ShowExampleMenuFile();
-        //         ImGui::EndMenu();
-        //     }
-        //     ImGui::EndMenu();
-        // }
         ImGui::EndMenu();
     }
     if (ImGui::MenuItem(
@@ -85,52 +139,6 @@ static void ShowExampleMenuFile()
         }(), "Ctrl+Shift+S")) {}
 
     ImGui::Separator();
-    // if (ImGui::BeginMenu("Options"))
-    // {
-    //     static bool enabled = true;
-    //     ImGui::MenuItem("Enabled", "", &enabled);
-    //     ImGui::BeginChild("child", ImVec2(0, 60), ImGuiChildFlags_Borders);
-    //     for (int i = 0; i < 10; i++)
-    //         ImGui::Text("Scrolling Text %d", i);
-    //     ImGui::EndChild();
-    //     static float f = 0.5f;
-    //     static int n = 0;
-    //     ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
-    //     ImGui::InputFloat("Input", &f, 0.1f);
-    //     ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
-    //     ImGui::EndMenu();
-    // }
-    // if (ImGui::BeginMenu("Colors"))
-    // {
-    //     float sz = ImGui::GetTextLineHeight();
-    //     for (int i = 0; i < ImGuiCol_COUNT; i++)
-    //     {
-    //         const char* name = ImGui::GetStyleColorName((ImGuiCol)i);
-    //         ImVec2 p = ImGui::GetCursorScreenPos();
-    //         ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiCol)i));
-    //         ImGui::Dummy(ImVec2(sz, sz));
-    //         ImGui::SameLine();
-    //         ImGui::MenuItem(name);
-    //     }
-    //     ImGui::EndMenu();
-    // }
-
-    // Here we demonstrate appending again to the "Options" menu (which we already created above)
-    // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
-    // In a real code-base using it would make senses to use this feature from very different code locations.
-    // if (ImGui::BeginMenu("Options")) // <-- Append!
-    // {
-    //     static bool b = true;
-    //     ImGui::Checkbox("SomeOption", &b);
-    //     ImGui::EndMenu();
-    // }
-
-    // if (ImGui::BeginMenu("Disabled", false)) // Disabled
-    // {
-    //     IM_ASSERT(0);
-    // }
-    // if (ImGui::MenuItem("Checked", NULL, true)) {}
-    // ImGui::Separator();
     if (ImGui::MenuItem(
         [&]() -> const char* {
             switch (language){
@@ -215,11 +223,16 @@ int main(int, char**)
     builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
     builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
     builder.BuildRanges(&ranges);
-    io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 15.0f, nullptr, ranges.Data);
+    io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 16.0f, nullptr, ranges.Data);
 
     // Our state
     bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    const char* filename = "MyImage01.jpg";
+    SDL_Texture* my_texture;
+    int my_image_width, my_image_height;
+    bool ret = LoadTextureFromFile("MyImage01.jpg", renderer, &my_texture, &my_image_width, &my_image_height);
+    IM_ASSERT(ret);
 
     // Main loop
     bool done = false;
@@ -263,9 +276,11 @@ int main(int, char**)
                     }
                 }()))
             {
-                ShowExampleMenuFile();
+                ShowFileMenu();
                 ImGui::EndMenu();
             }
+
+
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
                     switch (language){
@@ -318,6 +333,8 @@ int main(int, char**)
                 }(), "Ctrl+V")) {}
                 ImGui::EndMenu();
             }
+
+
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
                     switch (language){
@@ -354,6 +371,8 @@ int main(int, char**)
                 }
                 ImGui::EndMenu();
             }
+
+            
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
                     switch (language){
@@ -404,6 +423,11 @@ int main(int, char**)
                 ImGui::ShowDemoWindow(&show_demo_window);
         }
 
+        ImGui::Begin("SDL_Renderer Texture Test");
+        ImGui::Text("pointer = %p", my_texture);
+        ImGui::Text("size = %d x %d", my_image_width, my_image_height);
+        ImGui::Image((ImTextureID)(intptr_t)my_texture, ImVec2((float)my_image_width, (float)my_image_height));
+        ImGui::End();
 //*************************************************************************************************************************
 
         // Rendering
