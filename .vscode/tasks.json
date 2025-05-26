@@ -16,6 +16,14 @@
             "options": {
                 "cwd": "${workspaceFolder}"
             }
+        },
+        {
+            "label": "make-clean",
+            "type": "shell",
+            "command": "C:/msys64/ucrt64.exe make clean",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
         }
     ]
 }

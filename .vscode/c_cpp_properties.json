@@ -4,7 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Users/Admin/vcpkg/installed/x64-windows/include"
+                "C:/msys64/ucrt64/include/freetype2",
+                "C:/msys64/ucrt64/include/SDL2"
             ],
             "defines": [
                 "_DEBUG",

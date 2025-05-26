@@ -1,62 +1,101 @@
+##---------------------------------------------------------------------------------
+#
+#                      ██████╗ ██╗   ██╗██╗██╗     ██████╗
+#                      ██╔══██╗██║   ██║██║██║     ██╔══██╗
+#                      ██████╔╝██║   ██║██║██║     ██║  ██║
+#                      ██╔══██╗██║   ██║██║██║     ██║  ██║
+#                      ██████╔╝╚██████╔╝██║███████╗██████╔╝
+#                      ╚═════╝  ╚═════╝ ╚═╝╚══════╝╚═════╝
 #
 ##---------------------------------------------------------------------------------
 ##                !THIS FROJECT IS CONFIGURED TO RUN IN VS CODE!
-## Making a build takes time, so launch.json may throw a error for the first time!
+##
+## Making a build takes time, so launch.json may throw an error at the first run!
+## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+##
+## Go to "Run and Debug" (Ctrl+Shift+D) and choose "Debug Build" or "Release Build"
+## To clean "build" folder press (Ctrl+Shift+P) -> "Tasks: Run Task" -> make-clean
+##
 ##---------------------------------------------------------------------------------
+#                           Requirements to build
 #
-# To run this programm on windows you will need libstdc++, libgcc and lwinpthread,
-# freetype, libpng, harfbuzz, brotli, bzip2, graphite2
-# use UCRT64 (C:\msys64\ucrt64.exe) to download them 'pacman -S mingw-w64-ucrt-x86_64-LIBNAME'
+# To build this programm on windows you will need: g++, libstdc++, lwinpthread
+# Install them via UCRT64 (C:\msys64\ucrt64.exe):
+# pacman -Syu
+# pacman -S mingw-w64-ucrt-x86_64-toolchain
 #
-#
-# in UCRT64 cd to project folder and run:
-# make build=debug
-#        OR
-# make build=release
-# (after building a release I compress it via UPX https://github.com/upx/upx)
+# You will also need freetype, libpng, harfbuzz, brotli, bzip2, graphite2, SDL2
+# pacman -S mingw-w64-ucrt-x86_64-LIBNAME
 # 
-# Use 'make clean' to clean build folder
+##---------------------------------------------------------------------------------
+##           If you prefer to use console or don't want to use VS Code
+##
+## in UCRT64 cd to the project folder and run:
+## make build=debug
+##        OR
+## make build=release
+## (after building a release I compress it via UPX https://github.com/upx/upx)
+## 
+## Use 'make clean' to clean build folder
+##
+##---------------------------------------------------------------------------------
 
 CXX  = g++
 
 RELEASE = RELEASE_Infinite_Filter
 DEBUG   = DEBUG_Infinite_Filter
 
-IMGUI_DIR = ./imgui
-SDL2_DIR  = ./SDL2
-BUILD_DIR = ./build
-FREETYPE_DIR = C:/msys64/ucrt64
+IMGUI_DIR     = ./include/imgui
+BACKENDS_DIR  = ./include/backends/imgui
+STB_DIR       = ./include/stb
+BUILD_DIR     = ./build
+SDL2_DIR      = C:/msys64/ucrt64/include/SDL2
+FREETYPE_DIR  = C:/msys64/ucrt64/include/freetype2
+FREETYPE_DIR2 = ./include/imgui/misc/freetype
+
 
 SOURCES := main.cpp
-SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp \
-           $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
-SOURCES += $(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer2.cpp
-SOURCES += $(IMGUI_DIR)/misc/freetype/imgui_freetype.cpp
+SOURCES += $(IMGUI_DIR)/imgui.cpp \
+           $(IMGUI_DIR)/imgui_demo.cpp \
+           $(IMGUI_DIR)/imgui_draw.cpp \
+           $(IMGUI_DIR)/imgui_tables.cpp \
+           $(IMGUI_DIR)/imgui_widgets.cpp \
+           $(BACKENDS_DIR)/imgui_impl_sdl2.cpp \
+           $(BACKENDS_DIR)/imgui_impl_sdlrenderer2.cpp \
+           $(FREETYPE_DIR2)/imgui_freetype.cpp
+
 SOURCES := $(basename $(notdir $(SOURCES)))
 OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
-EXISTING_EXE := $(basename $(notdir $(shell find $(BUILD_DIR) -name '*.exe')))
 
-CXXFLAGS = -std=c++11 -I./ -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(SDL2_DIR)/include \
-           -I$(IMGUI_DIR)/misc/freetype -I$(FREETYPE_DIR)/include/freetype2 -I$(FREETYPE_DIR)/include/freetype2/freetype -I$(FREETYPE_DIR)/include/freetype2/freetype/config
-RELEASE_CXXFLAGS = -g0 -O3 -w -DNDEBUG -flto -fno-rtti -fno-exceptions -ffunction-sections \
-                   -fdata-sections -Wl,--gc-sections -fvisibility=hidden -fomit-frame-pointer \
-                   -funroll-loops -fstrict-aliasing -fipa-pta -ftree-vectorize \
-                   -fno-semantic-interposition -Wl,-O3 -Wl,--relax -Wl,--strip-all -mfpmath=both \
-                   -mbranch-cost=2 -fno-stack-protector -fno-unwind-tables # There are hell-a-lot-of stuff
+
+CXXFLAGS = -std=c++11 \
+           -I$(IMGUI_DIR) \
+           -I$(BACKENDS_DIR) \
+           -I$(STB_DIR) \
+           -I$(SDL2_DIR) \
+           -I$(FREETYPE_DIR) \
+           -I$(FREETYPE_DIR2)
+
+RELEASE_CXXFLAGS = -g0 -O3 -w -DNDEBUG -flto -fno-rtti -fno-exceptions \
+                   -ffunction-sections -fdata-sections -Wl,--gc-sections \
+                   -fvisibility=hidden -fomit-frame-pointer -funroll-loops \
+                   -fstrict-aliasing -fipa-pta -ftree-vectorize \
+                   -fno-semantic-interposition -Wl,-O3 -Wl,--relax \
+                   -Wl,--strip-all -mfpmath=both -mbranch-cost=2 \
+                   -fno-stack-protector -fno-unwind-tables
+                   # There are hell-a-lot-of stuff
+
 DEBUG_CXXFLAGS = -g -g3 -O0
-# DEBUG_CXXFLAGS = -g3 -O0 -Wall -Wextra -Wpedantic -Wshadow -Wformat=2 -Wundef \
-#                  -fno-omit-frame-pointer -fno-inline -fno-common \
-#                  -Wcast-qual -Wduplicated-cond -Wlogical-op
-LDFLAGS = -L$(SDL2_DIR)/lib -L$(FREETYPE_DIR)/lib \
-          -lmingw32 -lSDL2main -lSDL2 -lfreetype \
-          -lpng -lharfbuzz -lgraphite2 -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
+
+LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreetype -lpng -lharfbuzz -lgraphite2 \
+          -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
           -Wl,--dynamicbase -Wl,--nxcompat \
           -static-libstdc++ -static-libgcc -static -lwinpthread \
           -lsetupapi -lhid -lwinmm -limm32 -lole32 -loleaut32 -lversion
 
-##---------------------------------------------------------------------
-## DEBUG AND RELEASE REALISATION
-##---------------------------------------------------------------------
+##---------------------------------------------------------------------------------
+##                         DEBUG AND RELEASE REALISATION
+##---------------------------------------------------------------------------------
 
 ifeq ($(build), debug)
 	CXXFLAGS += $(DEBUG_CXXFLAGS)
@@ -67,9 +106,9 @@ ifeq ($(build), release)
 	EXE = $(RELEASE)
 endif
 
-##---------------------------------------------------------------------
-## BUILD FLAGS PER PLATFORM (only for windows for now)
-##---------------------------------------------------------------------
+##---------------------------------------------------------------------------------
+##           BUILD FLAGS PER PLATFORM (tested only on windows for now)
+##---------------------------------------------------------------------------------
 
 ifeq ($(OS),Windows_NT)
     PLATFORM = windows
@@ -94,9 +133,9 @@ else ifeq ($(PLATFORM),linux)
   EXE_EXT =
 endif
 
-##---------------------------------------------------------------------
-## BUILD RULES
-##---------------------------------------------------------------------
+##---------------------------------------------------------------------------------
+##                                 BUILD RULES
+##---------------------------------------------------------------------------------
 
 $(BUILD_DIR)/$(build)_%.o:%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -109,6 +148,7 @@ $(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/backends/%.cpp
 
 $(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/misc/freetype/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 
 all: mkdir $(BUILD_DIR)/$(EXE)
 	@echo $(build) build complete

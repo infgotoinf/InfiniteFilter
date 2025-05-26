@@ -11,13 +11,16 @@
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
 #define _CRT_SECURE_NO_WARNINGS
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#include "imgui/imgui.h"
-#include "imgui/backends/imgui_impl_sdl2.h"
-#include "imgui/backends/imgui_impl_sdlrenderer2.h"
+#include "include/stb/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "include/stb/stb_image_write.h"
+
+#include "include/imgui/imgui.h"
+#include "include/imgui/backends/imgui_impl_sdl2.h"
+#include "include/imgui/backends/imgui_impl_sdlrenderer2.h"
 #include <stdio.h>
-#include "SDL2/include/SDL.h"
-#include "imgui/misc/fonts/ProggyVector.h"
+#include <SDL.h>
+#include "include/imgui/misc/fonts/ProggyVector.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -26,6 +29,8 @@
 enum Languages {ENG, RUS};
 
 int language = ENG;
+
+
 
 
 
@@ -83,6 +88,8 @@ bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Text
     IM_FREE(file_data);
     return ret;
 }
+
+
 
 
 
@@ -227,14 +234,21 @@ int main(int, char**)
     // io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 16.0f, nullptr, ranges.Data);
     io.Fonts->AddFontFromMemoryCompressedTTF(ProggyVector_compressed_data, ProggyVector_compressed_size, 16.0f, nullptr, ranges.Data);
 
+
+
+
     // Our state
     bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
     const char* filename = "../MyImage01.jpg";
     SDL_Texture* my_texture;
     int my_image_width, my_image_height;
     bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
     IM_ASSERT(ret);
+
+
+
 
     // Main loop
     bool done = false;
@@ -425,8 +439,9 @@ int main(int, char**)
                 ImGui::ShowDemoWindow(&show_demo_window);
         }
 
-        ImGui::Begin("SDL_Renderer Texture Test");
+        ImGui::Begin("Image Render");
         ImGui::Text("pointer = %p", my_texture);
+        ImGui::Text("size = %d x %d", my_image_width, my_image_height);
         ImGui::Text("size = %d x %d", my_image_width, my_image_height);
         ImGui::Image((ImTextureID)(intptr_t)my_texture, ImVec2((float)my_image_width, (float)my_image_height));
         ImGui::End();
