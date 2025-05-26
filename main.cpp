@@ -17,6 +17,7 @@
 #include "imgui/backends/imgui_impl_sdlrenderer2.h"
 #include <stdio.h>
 #include "SDL2/include/SDL.h"
+#include "imgui/misc/fonts/ProggyVector.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -223,15 +224,16 @@ int main(int, char**)
     builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
     builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
     builder.BuildRanges(&ranges);
-    io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 16.0f, nullptr, ranges.Data);
+    // io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 16.0f, nullptr, ranges.Data);
+    io.Fonts->AddFontFromMemoryCompressedTTF(ProggyVector_compressed_data, ProggyVector_compressed_size, 16.0f, nullptr, ranges.Data);
 
     // Our state
     bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    const char* filename = "MyImage01.jpg";
+    const char* filename = "../MyImage01.jpg";
     SDL_Texture* my_texture;
     int my_image_width, my_image_height;
-    bool ret = LoadTextureFromFile("MyImage01.jpg", renderer, &my_texture, &my_image_width, &my_image_height);
+    bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
     IM_ASSERT(ret);
 
     // Main loop
