@@ -11,16 +11,18 @@
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
 #define _CRT_SECURE_NO_WARNINGS
 #define STB_IMAGE_IMPLEMENTATION
-#include "include/stb/stb_image.h"
+#include "../../3rdparty/stb/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "include/stb/stb_image_write.h"
+#include "../../3rdparty/stb/stb_image_write.h"
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "../../3rdparty/stb/stb_image_resize2.h"
 
-#include "include/imgui/imgui.h"
-#include "include/imgui/backends/imgui_impl_sdl2.h"
-#include "include/imgui/backends/imgui_impl_sdlrenderer2.h"
+#include "../../3rdparty/imgui/imgui.h"
+#include "../../3rdparty/imgui/backends/imgui_impl_sdl2.h"
+#include "../../3rdparty/imgui/backends/imgui_impl_sdlrenderer2.h"
 #include <stdio.h>
 #include <SDL.h>
-#include "include/imgui/misc/fonts/ProggyVector.h"
+#include "../../assets/fonts/ProggyVector.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -241,7 +243,7 @@ int main(int, char**)
     bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    const char* filename = "../MyImage01.jpg";
+    const char* filename = "../assets/MyImage01.jpg";
     SDL_Texture* my_texture;
     int my_image_width, my_image_height;
     bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
@@ -439,11 +441,27 @@ int main(int, char**)
                 ImGui::ShowDemoWindow(&show_demo_window);
         }
 
-        ImGui::Begin("Image Render");
-        ImGui::Text("pointer = %p", my_texture);
-        ImGui::Text("size = %d x %d", my_image_width, my_image_height);
-        ImGui::Text("size = %d x %d", my_image_width, my_image_height);
+
+        static int f = 0;
+
+        ImGuiWindowFlags window_flags = 0;
+        window_flags |= ImGuiWindowFlags_NoTitleBar;
+        window_flags |= ImGuiWindowFlags_NoScrollbar;
+        window_flags |= ImGuiWindowFlags_NoResize;
+        window_flags |= ImGuiWindowFlags_MenuBar;
+
+        ImGui::Begin("Image Render", nullptr, window_flags);
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::MenuItem("Load")) {};
+            if (ImGui::MenuItem("Export")) {};
+            ImGui::EndMenuBar();
+        }
+        // ImGui::Text("pointer = %p", my_texture);
+        // ImGui::Text("size = %d x %d", my_image_width, my_image_height);
         ImGui::Image((ImTextureID)(intptr_t)my_texture, ImVec2((float)my_image_width, (float)my_image_height));
+        ImGui::SliderInt("Image size", &f, -10, 10);
+        ImGui::Text("Image %d x %d", my_image_width, my_image_height);
         ImGui::End();
 //*************************************************************************************************************************
 

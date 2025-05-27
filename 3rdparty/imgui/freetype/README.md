@@ -27,6 +27,7 @@ See https://gist.github.com/ocornut/b3a9ecf13502fd818799a452969649ad
 ### Comparison
 
 Small, thin anti-aliased fonts typically benefit a lot from FreeType's hinting:
+
 ![comparing_font_rasterizers](https://user-images.githubusercontent.com/8225057/107550178-fef87f00-6bd0-11eb-8d09-e2edb2f0ccfc.gif)
 
 ### Colorful glyphs/emojis

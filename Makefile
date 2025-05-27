@@ -10,7 +10,8 @@
 ##---------------------------------------------------------------------------------
 ##                !THIS FROJECT IS CONFIGURED TO RUN IN VS CODE!
 ##
-## Making a build takes time, so launch.json may throw an error at the first run!
+## Making a build takes time, so launch.json may throw an error at the first run
+##      or you will have to rerun build to see your updated application!
 ## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ##
 ## Go to "Run and Debug" (Ctrl+Shift+D) and choose "Debug Build" or "Release Build"
@@ -45,24 +46,18 @@ CXX  = g++
 RELEASE = RELEASE_Infinite_Filter
 DEBUG   = DEBUG_Infinite_Filter
 
-IMGUI_DIR     = ./include/imgui
-BACKENDS_DIR  = ./include/backends/imgui
-STB_DIR       = ./include/stb
+SRC_DIR       = ./infinitefilter/src
 BUILD_DIR     = ./build
+IMGUI_DIR     = ./3rdparty/imgui
+BACKENDS_DIR  = $(IMGUI_DIR)/backends
+FREETYPE_DIR2 = $(IMGUI_DIR)/freetype
+STB_DIR       = ./3rdparty/stb
 SDL2_DIR      = C:/msys64/ucrt64/include/SDL2
 FREETYPE_DIR  = C:/msys64/ucrt64/include/freetype2
-FREETYPE_DIR2 = ./include/imgui/misc/freetype
 
 
-SOURCES := main.cpp
-SOURCES += $(IMGUI_DIR)/imgui.cpp \
-           $(IMGUI_DIR)/imgui_demo.cpp \
-           $(IMGUI_DIR)/imgui_draw.cpp \
-           $(IMGUI_DIR)/imgui_tables.cpp \
-           $(IMGUI_DIR)/imgui_widgets.cpp \
-           $(BACKENDS_DIR)/imgui_impl_sdl2.cpp \
-           $(BACKENDS_DIR)/imgui_impl_sdlrenderer2.cpp \
-           $(FREETYPE_DIR2)/imgui_freetype.cpp
+SOURCES := $(shell find $(SRC_DIR) -name '*.cpp') \
+           $(shell find $(IMGUI_DIR) -name '*.cpp')
 
 SOURCES := $(basename $(notdir $(SOURCES)))
 OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
@@ -71,10 +66,10 @@ OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
 CXXFLAGS = -std=c++11 \
            -I$(IMGUI_DIR) \
            -I$(BACKENDS_DIR) \
+           -I$(FREETYPE_DIR2) \
            -I$(STB_DIR) \
            -I$(SDL2_DIR) \
-           -I$(FREETYPE_DIR) \
-           -I$(FREETYPE_DIR2)
+           -I$(FREETYPE_DIR)
 
 RELEASE_CXXFLAGS = -g0 -O3 -w -DNDEBUG -flto -fno-rtti -fno-exceptions \
                    -ffunction-sections -fdata-sections -Wl,--gc-sections \
@@ -85,7 +80,7 @@ RELEASE_CXXFLAGS = -g0 -O3 -w -DNDEBUG -flto -fno-rtti -fno-exceptions \
                    -fno-stack-protector -fno-unwind-tables
                    # There are hell-a-lot-of stuff
 
-DEBUG_CXXFLAGS = -g -g3 -O0
+DEBUG_CXXFLAGS = -g -g3 -O0 -Wall -Wextra -pedantic
 
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreetype -lpng -lharfbuzz -lgraphite2 \
           -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
@@ -137,16 +132,16 @@ endif
 ##                                 BUILD RULES
 ##---------------------------------------------------------------------------------
 
-$(BUILD_DIR)/$(build)_%.o:%.cpp
+$(BUILD_DIR)/$(build)_%.o:$(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/backends/%.cpp
+$(BUILD_DIR)/$(build)_%.o:$(BACKENDS_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/misc/freetype/%.cpp
+$(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
