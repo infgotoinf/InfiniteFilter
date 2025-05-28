@@ -20,6 +20,7 @@
 #include "../../3rdparty/imgui/imgui.h"
 #include "../../3rdparty/imgui/backends/imgui_impl_sdl2.h"
 #include "../../3rdparty/imgui/backends/imgui_impl_sdlrenderer2.h"
+#include "../../3rdparty/nfd/nfd.hpp"
 #include <stdio.h>
 #include <SDL.h>
 #include "../../assets/fonts/ProggyVector.h"
@@ -238,16 +239,25 @@ int main(int, char**)
 
 
 
+    NFD::Guard nfdGuard;
+
 
     // Our state
     bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    const char* filename = "../assets/MyImage01.jpg";
+    const char* filename = u8"../assets/сова.jpg";
     SDL_Texture* my_texture;
     int my_image_width, my_image_height;
     bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
     IM_ASSERT(ret);
+
+
+
+
+    // show the dialog
+    NFD::UniquePathU8 outPath;
+    nfdfilteritem_t filter[2] = {{"Image files", "jpg,png"}, {"All files", "*"}};
 
 
 
@@ -453,8 +463,27 @@ int main(int, char**)
         ImGui::Begin("Image Render", nullptr, window_flags);
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::MenuItem("Load")) {};
-            if (ImGui::MenuItem("Export")) {};
+            if (ImGui::MenuItem("Load")) {
+                nfdresult_t result = NFD::OpenDialog(outPath, filter, 2);
+                if (result == NFD_OKAY)
+                {
+                    puts("Success!");
+                    filename = outPath.get();
+                }
+                else if (result == NFD_CANCEL)
+                {
+                    puts("User pressed cancel.");
+                }
+                else 
+                {
+                    printf("Error: %s\n", NFD::GetError());
+                }
+                bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
+                IM_ASSERT(ret);
+            };
+            if (ImGui::MenuItem("Export")) {
+
+            };
             ImGui::EndMenuBar();
         }
         // ImGui::Text("pointer = %p", my_texture);
@@ -481,7 +510,6 @@ int main(int, char**)
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    SDL_Quit();
 
     return 0;
 }

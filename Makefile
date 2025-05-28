@@ -52,12 +52,14 @@ IMGUI_DIR     = ./3rdparty/imgui
 BACKENDS_DIR  = $(IMGUI_DIR)/backends
 FREETYPE_DIR2 = $(IMGUI_DIR)/freetype
 STB_DIR       = ./3rdparty/stb
+NFD_DIR       = ./3rdparty/nfd
 SDL2_DIR      = C:/msys64/ucrt64/include/SDL2
 FREETYPE_DIR  = C:/msys64/ucrt64/include/freetype2
 
 
 SOURCES := $(shell find $(SRC_DIR) -name '*.cpp') \
-           $(shell find $(IMGUI_DIR) -name '*.cpp')
+           $(shell find $(IMGUI_DIR) -name '*.cpp')\
+           $(shell find $(NFD_DIR) -name '*.cpp')
 
 SOURCES := $(basename $(notdir $(SOURCES)))
 OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
@@ -68,6 +70,7 @@ CXXFLAGS = -std=c++11 \
            -I$(BACKENDS_DIR) \
            -I$(FREETYPE_DIR2) \
            -I$(STB_DIR) \
+           -I$(NFD_DIR) \
            -I$(SDL2_DIR) \
            -I$(FREETYPE_DIR)
 
@@ -85,8 +88,8 @@ DEBUG_CXXFLAGS = -g -g3 -O0 -Wall -Wextra -pedantic
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreetype -lpng -lharfbuzz -lgraphite2 \
           -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
           -Wl,--dynamicbase -Wl,--nxcompat \
-          -static-libstdc++ -static-libgcc -static -lwinpthread \
-          -lsetupapi -lhid -lwinmm -limm32 -lole32 -loleaut32 -lversion
+          -static-libstdc++ -static-libgcc -static -lwinpthread -lsetupapi -lhid \
+          -lwinmm -limm32 -lshell32 -lole32 -loleaut32 -luuid -lversion
 
 ##---------------------------------------------------------------------------------
 ##                         DEBUG AND RELEASE REALISATION
@@ -142,6 +145,9 @@ $(BUILD_DIR)/$(build)_%.o:$(BACKENDS_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/$(build)_%.o:$(NFD_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
