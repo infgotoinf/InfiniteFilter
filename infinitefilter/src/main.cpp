@@ -11,6 +11,10 @@
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
 #define _CRT_SECURE_NO_WARNINGS
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_WINDOWS_UTF8
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "../../3rdparty/stb/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../../3rdparty/stb/stb_image_write.h"
@@ -76,19 +80,42 @@ bool LoadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* ren
 // Open and read a file, then forward to LoadTextureFromMemory()
 bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture, int* out_width, int* out_height)
 {
+#ifdef _WIN32
+    // Convert UTF-8 to UTF-16 for Windows
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, file_name, -1, NULL, 0);
+    wchar_t* wfilename = new wchar_t[wlen];
+    MultiByteToWideChar(CP_UTF8, 0, file_name, -1, wfilename, wlen);
+    
+    FILE* f = _wfopen(wfilename, L"rb");
+    delete[] wfilename;
+#else
     FILE* f = fopen(file_name, "rb");
-    if (f == NULL)
+#endif
+    
+    if (f == nullptr) {
+        fprintf(stderr, "Failed to open file: %s\n", file_name);
         return false;
+    }
+    
     fseek(f, 0, SEEK_END);
-    size_t file_size = (size_t)ftell(f);
-    if (file_size == -1)
+    long file_size = ftell(f);
+    if (file_size == -1) {
+        fclose(f);
         return false;
+    }
+    
     fseek(f, 0, SEEK_SET);
-    void* file_data = IM_ALLOC(file_size);
-    fread(file_data, 1, file_size, f);
+    unsigned char* file_data = new unsigned char[file_size];
+    size_t read_size = fread(file_data, 1, file_size, f);
     fclose(f);
+    
+    if (read_size != static_cast<size_t>(file_size)) {
+        delete[] file_data;
+        return false;
+    }
+    
     bool ret = LoadTextureFromMemory(file_data, file_size, renderer, out_texture, out_width, out_height);
-    IM_FREE(file_data);
+    delete[] file_data;
     return ret;
 }
 
@@ -246,7 +273,7 @@ int main(int, char**)
     bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    const char* filename = u8"../assets/сова.jpg";
+    const char* filename = u8"../assets/MyImage01.jpg";
     SDL_Texture* my_texture;
     int my_image_width, my_image_height;
     bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
@@ -257,7 +284,9 @@ int main(int, char**)
 
     // show the dialog
     NFD::UniquePathU8 outPath;
-    nfdfilteritem_t filter[2] = {{"Image files", "jpg,png"}, {"All files", "*"}};
+    nfdfilteritem_t filter[9] = {{"Image files", "jpg,png,tga,bmp,psd,gif,hdr,pic"},
+                                {"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"}, {"BMP", "bmp"},
+                                {"PSD", "psd"}, {"GIF", "gif"}, {"HDR", "hdr"}, {"PIC", "pic"}};
 
 
 
@@ -464,11 +493,20 @@ int main(int, char**)
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::MenuItem("Load")) {
-                nfdresult_t result = NFD::OpenDialog(outPath, filter, 2);
+                nfdresult_t result = NFD::OpenDialog(outPath, filter, 9);
                 if (result == NFD_OKAY)
                 {
-                    puts("Success!");
+                    // Destroy previous texture before loading new one
+                    if (my_texture) {
+                        SDL_DestroyTexture(my_texture);
+                        my_texture = nullptr;
+                    }
+                
                     filename = outPath.get();
+                    bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
+                    if (!ret) {
+                        fprintf(stderr, "Failed to load image: %s\n", filename);
+                    }
                 }
                 else if (result == NFD_CANCEL)
                 {
@@ -501,6 +539,10 @@ int main(int, char**)
         SDL_RenderClear(renderer);
         ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
+    }
+
+    if (my_texture) {
+        SDL_DestroyTexture(my_texture);
     }
 
     // Cleanup
