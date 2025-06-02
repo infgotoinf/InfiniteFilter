@@ -17,6 +17,7 @@
 #endif
 #include "../../3rdparty/stb/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STBIW_WINDOWS_UTF8
 #include "../../3rdparty/stb/stb_image_write.h"
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "../../3rdparty/stb/stb_image_resize2.h"
@@ -26,6 +27,8 @@
 #include "../../3rdparty/imgui/backends/imgui_impl_sdlrenderer2.h"
 #include "../../3rdparty/nfd/nfd.hpp"
 #include <stdio.h>
+#include <iostream>
+#include <string>
 #include <SDL.h>
 #include "../../assets/fonts/ProggyVector.h"
 
@@ -38,7 +41,7 @@ enum Languages {ENG, RUS};
 int language = ENG;
 
 
-
+unsigned char* file_data;
 
 
 
@@ -105,17 +108,17 @@ bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Text
     }
     
     fseek(f, 0, SEEK_SET);
-    unsigned char* file_data = new unsigned char[file_size];
+    file_data = new unsigned char[file_size];
     size_t read_size = fread(file_data, 1, file_size, f);
     fclose(f);
     
     if (read_size != static_cast<size_t>(file_size)) {
-        delete[] file_data;
+        // delete[] file_data;
         return false;
     }
     
     bool ret = LoadTextureFromMemory(file_data, file_size, renderer, out_texture, out_width, out_height);
-    delete[] file_data;
+    // delete[] file_data;
     return ret;
 }
 
@@ -284,9 +287,11 @@ int main(int, char**)
 
     // show the dialog
     NFD::UniquePathU8 outPath;
-    nfdfilteritem_t filter[9] = {{"Image files", "jpg,png,tga,bmp,psd,gif,hdr,pic"},
+    nfdfilteritem_t import_filter[9] = {{"Image files", "jpg,png,tga,bmp,psd,gif,hdr,pic"},
                                 {"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"}, {"BMP", "bmp"},
                                 {"PSD", "psd"}, {"GIF", "gif"}, {"HDR", "hdr"}, {"PIC", "pic"}};
+    nfdfilteritem_t export_filter[5] = {{"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"},
+                                {"BMP", "bmp"}, {"HDR", "hdr"}};
 
 
 
@@ -493,7 +498,7 @@ int main(int, char**)
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::MenuItem("Load")) {
-                nfdresult_t result = NFD::OpenDialog(outPath, filter, 9);
+                nfdresult_t result = NFD::OpenDialog(outPath, import_filter, 9);
                 if (result == NFD_OKAY)
                 {
                     // Destroy previous texture before loading new one
@@ -516,11 +521,37 @@ int main(int, char**)
                 {
                     printf("Error: %s\n", NFD::GetError());
                 }
-                bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
                 IM_ASSERT(ret);
             };
             if (ImGui::MenuItem("Export")) {
-
+                nfdresult_t result = NFD::SaveDialog(outPath, export_filter, 5);
+                if (result == NFD_OKAY)
+                {
+                    filename = outPath.get();
+                    std::string file_extension = filename;
+                    size_t i = file_extension.rfind('.', file_extension.length());
+                    file_extension.substr(i+1, file_extension.length() - i);
+                    if (file_extension == "png")
+                    {
+                        // TODO: figure out with channels's thing
+                        stbi_write_png(filename, my_image_width, my_image_height, 4, file_data, my_image_width * 4);
+                    }
+                    if (file_extension == "jpg")
+                    {
+                        stbi_write_jpg(filename, my_image_width, my_image_height, 9, file_data, 100);
+                    }
+                    else {
+                        printf("Error: %s\n", file_extension);
+                    }
+                }
+                else if (result == NFD_CANCEL)
+                {
+                    puts("User pressed cancel.");
+                }
+                else 
+                {
+                    printf("Error: %s\n", NFD::GetError());
+                }
             };
             ImGui::EndMenuBar();
         }
