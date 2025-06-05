@@ -41,9 +41,20 @@ enum Languages {ENG, RUS};
 int language = ENG;
 
 
+enum Filters {Invert};
+
+
 unsigned char* file_data;
 
 
+typedef struct RGBAPixel_t
+{
+    uint8_t red   = 0;
+    uint8_t green = 0;
+    uint8_t blue  = 0;
+    uint8_t alpha = 0;
+
+} Pixel;
 
 
 
@@ -121,6 +132,47 @@ bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Text
     // delete[] file_data;
     return ret;
 }
+
+// bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture, int* out_width, int* out_height)
+// {
+// #ifdef _WIN32
+//     // Convert UTF-8 to UTF-16 for Windows
+//     int wlen = MultiByteToWideChar(CP_UTF8, 0, file_name, -1, NULL, 0);
+//     wchar_t* wfilename = new wchar_t[wlen];
+//     MultiByteToWideChar(CP_UTF8, 0, file_name, -1, wfilename, wlen);
+    
+//     FILE* f = _wfopen(wfilename, L"rb");
+//     delete[] wfilename;
+// #else
+//     FILE* f = fopen(file_name, "rb");
+// #endif
+    
+//     if (f == nullptr) {
+//         fprintf(stderr, "Failed to open file: %s\n", file_name);
+//         return false;
+//     }
+    
+//     fseek(f, 0, SEEK_END);
+//     long file_size = ftell(f);
+//     if (file_size == -1) {
+//         fclose(f);
+//         return false;
+//     }
+    
+//     fseek(f, 0, SEEK_SET);
+//     file_data = new unsigned char[file_size];
+//     size_t read_size = fread(file_data, 1, file_size, f);
+//     fclose(f);
+    
+//     if (read_size != static_cast<size_t>(file_size)) {
+//         // delete[] file_data;
+//         return false;
+//     }
+    
+//     bool ret = LoadTextureFromMemory(file_data, file_size, renderer, out_texture, out_width, out_height);
+//     // delete[] file_data;
+//     return ret;
+// }
 
 
 
@@ -553,8 +605,20 @@ int main(int, char**)
                     printf("Error: %s\n", NFD::GetError());
                 }
             };
+            if (ImGui::BeginMenu("Filters"))
+            {
+                if (ImGui::MenuItem("Invert")) {
+                    for (size_t i = 0; i < my_image_width * my_image_height; ++i)
+                    {
+                        file_data[i];
+                    }
+
+                }
+                ImGui::EndMenu();
+            }
             ImGui::EndMenuBar();
         }
+
         // ImGui::Text("pointer = %p", my_texture);
         // ImGui::Text("size = %d x %d", my_image_width, my_image_height);
         ImGui::Image((ImTextureID)(intptr_t)my_texture, ImVec2((float)my_image_width, (float)my_image_height));
