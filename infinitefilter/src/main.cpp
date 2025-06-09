@@ -15,6 +15,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
 #include "../../3rdparty/stb/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STBIW_WINDOWS_UTF8
@@ -22,13 +23,9 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "../../3rdparty/stb/stb_image_resize2.h"
 
-#include "../../3rdparty/imgui/imgui.h"
 #include "../../3rdparty/imgui/backends/imgui_impl_sdl2.h"
 #include "../../3rdparty/imgui/backends/imgui_impl_sdlrenderer2.h"
 #include "../../3rdparty/nfd/nfd.hpp"
-#include <stdio.h>
-#include <iostream>
-#include <string>
 #include <SDL.h>
 #include "../../assets/fonts/ProggyVector.h"
 
@@ -36,9 +33,7 @@
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
 #endif
 
-enum Languages {ENG, RUS};
-
-int language = ENG;
+#include "../headers/main_window_bar.h"
 
 
 enum Filters {Invert};
@@ -175,77 +170,6 @@ bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Text
 // }
 
 
-
-
-
-
-
-
-
-static void ShowFileMenu()
-{
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Новый..";
-                case ENG:
-                default: return "New..";
-            }
-        }(), "Ctrl+N")) {}
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Открыть..";
-                case ENG:
-                default: return "Open..";
-            }
-        }(), "Ctrl+O")) {}
-    if (ImGui::BeginMenu(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Открыть Новый..";
-                case ENG:
-                default: return "Open Recent..";
-            }
-        }()))
-    {
-        ImGui::MenuItem("fish_hat.c");
-        ImGui::MenuItem("fish_hat.inl");
-        ImGui::MenuItem("fish_hat.h");
-        ImGui::EndMenu();
-    }
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Сохранить";
-                case ENG:
-                default: return "Save";
-            }
-        }(), "Ctrl+S")) {}
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Сохранить Как..";
-                case ENG:
-                default: return "Save As..";
-            }
-        }(), "Ctrl+Shift+S")) {}
-
-    ImGui::Separator();
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Выйти";
-                case ENG:
-                default: return "Quit";
-            }
-        }(), "Alt+F4")) {}
-}
-
-
-
-
-
 // Main code
 int main(int, char**)
 {
@@ -325,9 +249,6 @@ int main(int, char**)
 
 
     // Our state
-    bool show_demo_window = true;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
     const char* filename = u8"../assets/MyImage01.jpg";
     SDL_Texture* my_texture;
     int my_image_width, my_image_height;
@@ -381,6 +302,7 @@ int main(int, char**)
 
             if (ImGui::BeginMainMenuBar())
         {
+            // File menu
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
                     switch (language){
@@ -393,8 +315,7 @@ int main(int, char**)
                 ShowFileMenu();
                 ImGui::EndMenu();
             }
-
-
+            // Edit menu
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
                     switch (language){
@@ -404,51 +325,10 @@ int main(int, char**)
                     }
                 }()))
             {
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Отменить";
-                        case ENG:
-                        default: return "Undo";
-                    }
-                }(), "Ctrl+Z")) {}
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Повторить";
-                        case ENG:
-                        default: return "Redo";
-                    }
-                }(), "Ctrl+Shift+Z", false, false)) {} // Disabled item
-                ImGui::Separator();
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Вырезать";
-                        case ENG:
-                        default: return "Cut";
-                    }
-                }(), "Ctrl+X")) {}
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Копировать";
-                        case ENG:
-                        default: return "Copy";
-                    }
-                }(), "Ctrl+C")) {}
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Вставить";
-                        case ENG:
-                        default: return "Paste";
-                    }
-                }(), "Ctrl+V")) {}
+                ShowEditMenu();
                 ImGui::EndMenu();
             }
-
-
+            // Settings menu
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
                     switch (language){
@@ -458,35 +338,10 @@ int main(int, char**)
                     }
                 }()))
             {
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Настройка";
-                        case ENG:
-                        default: return "Configuration";
-                    }
-                }())) {}
-                if (ImGui::BeginMenu(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Язык";
-                        case ENG:
-                        default: return "Language";
-                    }
-                }()))
-                {
-                    if (ImGui::MenuItem("English")) {
-                        language = 0;
-                    }
-                    if (ImGui::MenuItem(u8"Русский")){
-                        language = 1;
-                    }
-                    ImGui::EndMenu();
-                }
+                ShowSettingsWindow();
                 ImGui::EndMenu();
             }
-
-            
+            // Help menu
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
                     switch (language){
@@ -496,39 +351,7 @@ int main(int, char**)
                     }
                 }()))
             {
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Документация";
-                        case ENG:
-                        default: return "Documentation";
-                    }
-                }())) {}
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Сообщить об ошибке";
-                        case ENG:
-                        default: return "Report a bug";
-                    }
-                }())) {}
-                ImGui::Separator();
-                if (ImGui::MenuItem(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"О программе";
-                        case ENG:
-                        default: return "Credits";
-                    }
-                }())) {}
-                if (ImGui::Checkbox(
-                    [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Тестировочное окно";
-                        case ENG:
-                        default: return "Demo Window";
-                    }
-                }(), &show_demo_window)) {}
+                ShowHelpMenu();
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
@@ -536,6 +359,35 @@ int main(int, char**)
             if (show_demo_window)
                 ImGui::ShowDemoWindow(&show_demo_window);
         }
+
+
+
+
+
+        ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+        if (show_new_window)
+        {
+            ImGui::Begin("New", &show_new_window);
+            ImGui::Text("...");
+            ImGui::End();
+        }
+        if (show_config_window)
+        {
+            ImGui::Begin("Configuration", &show_config_window);
+            ImGui::Text("...");
+            ImGui::End();
+        }
+        if (show_credits_window)
+        {
+            ImGui::Begin("Credits", &show_credits_window);
+            ImGui::Text("...");
+            ImGui::End();
+        }
+
+
+
+
+
 
 
         static int f = 0;
