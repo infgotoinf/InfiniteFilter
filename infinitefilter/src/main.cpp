@@ -362,6 +362,14 @@ int main(int, char**)
 
 
 
+        ImVec4* colors = ImGui::GetStyle().Colors;
+        static float bright = 0.1f;
+        static float old_bright = bright;
+        static float step = 0.001f;
+        static float R = bright;
+        static float G = 0.0f;
+        static float B = 0.0f;
+        static float A = 0.95f;
 
 
         ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
@@ -372,13 +380,25 @@ int main(int, char**)
             ImGui::End();
         }
         if (show_config_window)
-        {
+        { // Configuratuion window
             ImGui::Begin("Configuration", &show_config_window);
-            ImGui::Text("...");
+            ImGui::SeparatorText("Theme settings");
+            if (ImGui::SliderFloat("Colour brightness", &bright, 0.0f, 1.0f, "%.2f"))
+            {
+                if (R >= old_bright) R = bright;
+                if (G >= old_bright) G = bright;
+                if (B >= old_bright) B = bright;
+                old_bright = bright;
+            };
+            if (ImGui::SliderFloat("Changing step", &step, 0.0f, bright))
+            {
+                if (step > bright) step = bright;
+            };
+            ImGui::SliderFloat("Alpha", &A, 0.0f, 1.0f, "%.2f");
             ImGui::End();
         }
         if (show_credits_window)
-        {
+        { // Credits window
             ImGui::Begin("Credits", &show_credits_window);
             ImGui::Text("...");
             ImGui::End();
@@ -386,6 +406,16 @@ int main(int, char**)
 
 
 
+        
+
+        if      (R >= bright &&                B >  step  ) B -= step;
+        else if (R >= bright && G <  bright && B <= step  ) G += step;
+        else if (R >  step   && G >= bright               ) R -= step;
+        else if (R <= step   && G >= bright && B <  bright) B += step;
+        else if (               G >  step   && B >= bright) G -= step;
+        else if (R <  bright && G <= step   && B >= bright) R += step;
+
+        colors[ImGuiCol_WindowBg] = ImVec4(R, G, B, A);
 
 
 
