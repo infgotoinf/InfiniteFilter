@@ -27,6 +27,7 @@
 #include "../../3rdparty/imgui/backends/imgui_impl_sdlrenderer2.h"
 #include "../../3rdparty/nfd/nfd.hpp"
 #include <SDL.h>
+#include <SDL_syswm.h>
 #include "../../assets/fonts/ProggyVector.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
@@ -128,46 +129,20 @@ bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Text
     return ret;
 }
 
-// bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture, int* out_width, int* out_height)
-// {
-// #ifdef _WIN32
-//     // Convert UTF-8 to UTF-16 for Windows
-//     int wlen = MultiByteToWideChar(CP_UTF8, 0, file_name, -1, NULL, 0);
-//     wchar_t* wfilename = new wchar_t[wlen];
-//     MultiByteToWideChar(CP_UTF8, 0, file_name, -1, wfilename, wlen);
-    
-//     FILE* f = _wfopen(wfilename, L"rb");
-//     delete[] wfilename;
-// #else
-//     FILE* f = fopen(file_name, "rb");
-// #endif
-    
-//     if (f == nullptr) {
-//         fprintf(stderr, "Failed to open file: %s\n", file_name);
-//         return false;
-//     }
-    
-//     fseek(f, 0, SEEK_END);
-//     long file_size = ftell(f);
-//     if (file_size == -1) {
-//         fclose(f);
-//         return false;
-//     }
-    
-//     fseek(f, 0, SEEK_SET);
-//     file_data = new unsigned char[file_size];
-//     size_t read_size = fread(file_data, 1, file_size, f);
-//     fclose(f);
-    
-//     if (read_size != static_cast<size_t>(file_size)) {
-//         // delete[] file_data;
-//         return false;
-//     }
-    
-//     bool ret = LoadTextureFromMemory(file_data, file_size, renderer, out_texture, out_width, out_height);
-//     // delete[] file_data;
-//     return ret;
-// }
+
+void renderWithTransparency(SDL_Renderer* renderer, ImGuiIO& io, int transparent_colorref)
+{
+    ImGui::Render();
+    SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, GetRValue(transparent_colorref), GetGValue(transparent_colorref), GetBValue(transparent_colorref), SDL_ALPHA_OPAQUE);
+	SDL_RenderFillRect(renderer, NULL);
+    SDL_RenderClear(renderer);
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+    SDL_RenderPresent(renderer);
+}
+
+
 
 
 // Main code
@@ -186,8 +161,8 @@ int main(int, char**)
 #endif
 
     // Create window with SDL_Renderer graphics context
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_BORDERLESS);
+    SDL_Window* window = SDL_CreateWindow("Infinite Filter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1, 1, window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -218,6 +193,22 @@ int main(int, char**)
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
+    
+
+
+    // Windows transparency setup
+    static const COLORREF transparent_colorref = RGB(255, 0, 255);
+#ifdef _WIN32
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(window, &wmInfo);
+	HWND handle = wmInfo.info.win.window;
+	if(!SetWindowLong(handle, GWL_EXSTYLE, GetWindowLong(handle, GWL_EXSTYLE) | WS_EX_LAYERED))
+		fprintf(stderr, "SetWindowLong Error\n");
+    if(!SetLayeredWindowAttributes(handle, transparent_colorref, 0, 1))
+		fprintf(stderr, "SetLayeredWindowAttributes Error\n");
+#endif
+
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -243,8 +234,6 @@ int main(int, char**)
     // io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 16.0f, nullptr, ranges.Data);
     io.Fonts->AddFontFromMemoryCompressedTTF(ProggyVector_compressed_data, ProggyVector_compressed_size, 16.0f, nullptr, ranges.Data);
 
-
-
     NFD::Guard nfdGuard;
 
 
@@ -268,6 +257,64 @@ int main(int, char**)
 
 
 
+//---------------------------------------------------------------------------------
+//          STYLE EDITING
+//---------------------------------------------------------------------------------
+    ImVec4* colors = ImGui::GetStyle().Colors;
+    
+    colors[ImGuiCol_TextDisabled]         = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
+    colors[ImGuiCol_ChildBg]              = ImVec4(0.04f, 0.04f, 0.04f, 0.30f);
+    colors[ImGuiCol_PopupBg]              = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
+    colors[ImGuiCol_Border]               = ImVec4(0.50f, 0.50f, 0.50f, 0.50f);
+    colors[ImGuiCol_FrameBg]              = ImVec4(0.22f, 0.22f, 0.22f, 0.50f);
+    colors[ImGuiCol_FrameBgHovered]       = ImVec4(0.50f, 0.50f, 0.50f, 0.40f);
+    colors[ImGuiCol_FrameBgActive]        = ImVec4(0.64f, 0.64f, 0.64f, 0.60f);
+    colors[ImGuiCol_TitleBg]              = ImVec4(0.06f, 0.06f, 0.06f, 1.00f);
+    colors[ImGuiCol_TitleBgActive]        = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+    colors[ImGuiCol_TitleBgCollapsed]     = ImVec4(0.00f, 0.00f, 0.00f, 0.50f);
+    colors[ImGuiCol_MenuBarBg]            = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+    colors[ImGuiCol_ScrollbarBg]          = ImVec4(0.02f, 0.02f, 0.02f, 0.52f);
+    colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.31f, 0.31f, 0.31f, 0.61f);
+    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 0.71f);
+    colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.51f, 0.51f, 0.51f, 0.81f);
+    colors[ImGuiCol_CheckMark]            = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
+    colors[ImGuiCol_SliderGrab]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.75f, 0.75f, 0.75f, 1.00f);
+    colors[ImGuiCol_Button]               = ImVec4(0.68f, 0.68f, 0.68f, 0.40f);
+    colors[ImGuiCol_ButtonHovered]        = ImVec4(0.82f, 0.82f, 0.82f, 0.50f);
+    colors[ImGuiCol_ButtonActive]         = ImVec4(0.96f, 0.96f, 0.96f, 0.60f);
+    colors[ImGuiCol_Header]               = ImVec4(0.50f, 0.50f, 0.50f, 0.30f);
+    colors[ImGuiCol_HeaderHovered]        = ImVec4(0.64f, 0.64f, 0.64f, 0.60f);
+    colors[ImGuiCol_HeaderActive]         = ImVec4(0.96f, 0.96f, 0.96f, 0.70f);
+    colors[ImGuiCol_Separator]            = ImVec4(0.50f, 0.50f, 0.50f, 0.50f);
+    colors[ImGuiCol_SeparatorHovered]     = ImVec4(0.82f, 0.82f, 0.82f, 0.50f);
+    colors[ImGuiCol_SeparatorActive]      = ImVec4(0.96f, 0.96f, 0.96f, 0.70f);
+    colors[ImGuiCol_ResizeGrip]           = ImVec4(1.00f, 1.00f, 1.00f, 0.20f);
+    colors[ImGuiCol_ResizeGripHovered]    = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
+    colors[ImGuiCol_ResizeGripActive]     = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+    colors[ImGuiCol_TabHovered]           = ImVec4(0.50f, 0.50f, 0.50f, 0.60f);
+    colors[ImGuiCol_Tab]                  = ImVec4(0.32f, 0.32f, 0.32f, 0.40f);
+    colors[ImGuiCol_TabSelected]          = ImVec4(0.64f, 0.64f, 0.64f, 0.80f);
+
+
+    
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.PopupRounding  = 3.0f;
+    style.GrabRounding   = 3.0f;
+    style.FrameRounding  = 3.0f;
+
+    // style.Colors[ImGuiCol_WindowBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.5f);
+    // style.Colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+//---------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
+
+    SDL_DisplayMode dm;
+    SDL_GetCurrentDisplayMode(0, &dm);
+    int width = dm.w;
+    int height = dm.h; 
+    SDL_SetWindowSize(window, width, height);
+    SDL_SetWindowPosition(window, 0, 0);
 
     // Main loop
     bool done = false;
@@ -298,9 +345,40 @@ int main(int, char**)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-//*************************************************************************************************************************
 
-            if (ImGui::BeginMainMenuBar())
+//---------------------------------------------------------------------------------
+//          WINDOW RAINBOW
+//---------------------------------------------------------------------------------
+        
+        static float bright = 0.15f;
+        static float old_bright = bright;
+        static float step = 0.001f;
+        static float R = bright;
+        static float G = 0.0f;
+        static float B = 0.0f;
+
+        if      (R >= bright &&                B >  step  ) B -= step;
+        else if (R >= bright && G <  bright && B <= step  ) G += step;
+        else if (R >  step   && G >= bright               ) R -= step;
+        else if (R <= step   && G >= bright && B <  bright) B += step;
+        else if (               G >  step   && B >= bright) G -= step;
+        else if (R <  bright && G <= step   && B >= bright) R += step;
+
+        colors[ImGuiCol_WindowBg] = ImVec4(R, G, B, 1.0f);
+//---------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
+
+
+        static int f = 0;
+
+        ImGuiWindowFlags window_flags = 0;
+        window_flags |= ImGuiWindowFlags_NoTitleBar;
+        window_flags |= ImGuiWindowFlags_NoScrollbar;
+        window_flags |= ImGuiWindowFlags_NoResize;
+        window_flags |= ImGuiWindowFlags_MenuBar;
+
+        ImGui::Begin("Image Render", nullptr, window_flags);
+        if (ImGui::BeginMenuBar())
         {
             // File menu
             if (ImGui::BeginMenu(
@@ -354,24 +432,12 @@ int main(int, char**)
                 ShowHelpMenu();
                 ImGui::EndMenu();
             }
-            ImGui::EndMainMenuBar();
+            ImGui::EndMenuBar();
 
             if (show_demo_window)
                 ImGui::ShowDemoWindow(&show_demo_window);
         }
-
-
-
-        ImVec4* colors = ImGui::GetStyle().Colors;
-        static float bright = 0.1f;
-        static float old_bright = bright;
-        static float step = 0.001f;
-        static float R = bright;
-        static float G = 0.0f;
-        static float B = 0.0f;
-        static float A = 0.95f;
-
-
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
         if (show_new_window)
         {
@@ -383,18 +449,17 @@ int main(int, char**)
         { // Configuratuion window
             ImGui::Begin("Configuration", &show_config_window);
             ImGui::SeparatorText("Theme settings");
-            if (ImGui::SliderFloat("Colour brightness", &bright, 0.0f, 1.0f, "%.2f"))
+            if (ImGui::SliderFloat("Colour brightness", &bright, 0.0f, 0.5f, "%.2f"))
             {
                 if (R >= old_bright) R = bright;
                 if (G >= old_bright) G = bright;
                 if (B >= old_bright) B = bright;
                 old_bright = bright;
             };
-            if (ImGui::SliderFloat("Changing step", &step, 0.0f, bright))
+            if (ImGui::SliderFloat("Changing step", &step, 0.0f, (bright > 0.1f ? 0.1f : bright)))
             {
                 if (step > bright) step = bright;
             };
-            ImGui::SliderFloat("Alpha", &A, 0.0f, 1.0f, "%.2f");
             ImGui::End();
         }
         if (show_credits_window)
@@ -403,103 +468,76 @@ int main(int, char**)
             ImGui::Text("...");
             ImGui::End();
         }
-
-
-
-        
-
-        if      (R >= bright &&                B >  step  ) B -= step;
-        else if (R >= bright && G <  bright && B <= step  ) G += step;
-        else if (R >  step   && G >= bright               ) R -= step;
-        else if (R <= step   && G >= bright && B <  bright) B += step;
-        else if (               G >  step   && B >= bright) G -= step;
-        else if (R <  bright && G <= step   && B >= bright) R += step;
-
-        colors[ImGuiCol_WindowBg] = ImVec4(R, G, B, A);
-
-
-
-
-        static int f = 0;
-
-        ImGuiWindowFlags window_flags = 0;
-        window_flags |= ImGuiWindowFlags_NoTitleBar;
-        window_flags |= ImGuiWindowFlags_NoScrollbar;
-        window_flags |= ImGuiWindowFlags_NoResize;
-        window_flags |= ImGuiWindowFlags_MenuBar;
-
-        ImGui::Begin("Image Render", nullptr, window_flags);
-        if (ImGui::BeginMenuBar())
-        {
-            if (ImGui::MenuItem("Load")) {
-                nfdresult_t result = NFD::OpenDialog(outPath, import_filter, 9);
-                if (result == NFD_OKAY)
-                {
-                    // Destroy previous texture before loading new one
-                    if (my_texture) {
-                        SDL_DestroyTexture(my_texture);
-                        my_texture = nullptr;
-                    }
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        //     if (ImGui::MenuItem("Load")) {
+        //         nfdresult_t result = NFD::OpenDialog(outPath, import_filter, 9);
+        //         if (result == NFD_OKAY)
+        //         {
+        //             // Destroy previous texture before loading new one
+        //             if (my_texture) {
+        //                 SDL_DestroyTexture(my_texture);
+        //                 my_texture = nullptr;
+        //             }
                 
-                    filename = outPath.get();
-                    bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
-                    if (!ret) {
-                        fprintf(stderr, "Failed to load image: %s\n", filename);
-                    }
-                }
-                else if (result == NFD_CANCEL)
-                {
-                    puts("User pressed cancel.");
-                }
-                else 
-                {
-                    printf("Error: %s\n", NFD::GetError());
-                }
-                IM_ASSERT(ret);
-            };
-            if (ImGui::MenuItem("Export")) {
-                nfdresult_t result = NFD::SaveDialog(outPath, export_filter, 5);
-                if (result == NFD_OKAY)
-                {
-                    filename = outPath.get();
-                    std::string file_extension = filename;
-                    size_t i = file_extension.rfind('.', file_extension.length());
-                    file_extension.substr(i+1, file_extension.length() - i);
-                    if (file_extension == "png")
-                    {
-                        // TODO: figure out with channels's thing
-                        stbi_write_png(filename, my_image_width, my_image_height, 4, file_data, my_image_width * 4);
-                    }
-                    if (file_extension == "jpg")
-                    {
-                        stbi_write_jpg(filename, my_image_width, my_image_height, 9, file_data, 100);
-                    }
-                    else {
-                        printf("Error: %s\n", file_extension);
-                    }
-                }
-                else if (result == NFD_CANCEL)
-                {
-                    puts("User pressed cancel.");
-                }
-                else 
-                {
-                    printf("Error: %s\n", NFD::GetError());
-                }
-            };
-            if (ImGui::BeginMenu("Filters"))
-            {
-                if (ImGui::MenuItem("Invert")) {
-                    for (size_t i = 0; i < my_image_width * my_image_height; ++i)
-                    {
-                        file_data[i];
-                    }
+        //             filename = outPath.get();
+        //             bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
+        //             if (!ret) {
+        //                 fprintf(stderr, "Failed to load image: %s\n", filename);
+        //             }
+        //         }
+        //         else if (result == NFD_CANCEL)
+        //         {
+        //             puts("User pressed cancel.");
+        //         }
+        //         else 
+        //         {
+        //             printf("Error: %s\n", NFD::GetError());
+        //         }
+        //         IM_ASSERT(ret);
+        //     };
+        //     if (ImGui::MenuItem("Export")) {
+        //         nfdresult_t result = NFD::SaveDialog(outPath, export_filter, 5);
+        //         if (result == NFD_OKAY)
+        //         {
+        //             filename = outPath.get();
+        //             std::string file_extension = filename;
+        //             size_t i = file_extension.rfind('.', file_extension.length());
+        //             file_extension.substr(i+1, file_extension.length() - i);
+        //             if (file_extension == "png")
+        //             {
+        //                 // TODO: figure out with channels's thing
+        //                 stbi_write_png(filename, my_image_width, my_image_height, 4, file_data, my_image_width * 4);
+        //             }
+        //             if (file_extension == "jpg")
+        //             {
+        //                 stbi_write_jpg(filename, my_image_width, my_image_height, 9, file_data, 100);
+        //             }
+        //             else {
+        //                 printf("Error: %s\n", file_extension);
+        //             }
+        //         }
+        //         else if (result == NFD_CANCEL)
+        //         {
+        //             puts("User pressed cancel.");
+        //         }
+        //         else 
+        //         {
+        //             printf("Error: %s\n", NFD::GetError());
+        //         }
+        //     };
+        //     if (ImGui::BeginMenu("Filters"))
+        //     {
+        //         if (ImGui::MenuItem("Invert")) {
+        //             for (size_t i = 0; i < my_image_width * my_image_height; ++i)
+        //             {
+        //                 file_data[i];
+        //             }
 
-                }
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenuBar();
-        }
+        //         }
+        //         ImGui::EndMenu();
+        //     }
+        //     ImGui::EndMenuBar();
+        // }
 
         // ImGui::Text("pointer = %p", my_texture);
         // ImGui::Text("size = %d x %d", my_image_width, my_image_height);
@@ -510,12 +548,7 @@ int main(int, char**)
 //*************************************************************************************************************************
 
         // Rendering
-        ImGui::Render();
-        SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-        SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
-        SDL_RenderClear(renderer);
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
-        SDL_RenderPresent(renderer);
+        renderWithTransparency(renderer, io, transparent_colorref);
     }
 
     if (my_texture) {
