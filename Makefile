@@ -153,6 +153,9 @@ $(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
 $(BUILD_DIR)/$(build)_%.o:$(NFD_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+$(BUILD_DIR)/$(build)_%.o:$(IMGUI_FD_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 
 all: mkdir $(BUILD_DIR)/$(EXE)
 	@echo $(build) build complete

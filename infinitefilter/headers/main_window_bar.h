@@ -1,7 +1,11 @@
 #include "../../3rdparty/imgui/imgui.h"
+#include "../../3rdparty/imgui_fd/ImGuiFileDialog.h"
 #include <stdio.h>
 #include <iostream>
 #include <string>
+
+#include "load_texture_impl.h"
+
 
 
 enum Languages {ENG, RUS};
@@ -14,8 +18,16 @@ bool show_credits_window = false;
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
+NFD::UniquePathU8 outPath;
+nfdfilteritem_t import_filter[9] = {{"Image files", "jpg,png,tga,bmp,psd,gif,hdr,pic"},
+                                    {"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"}, {"BMP", "bmp"},
+                                    {"PSD", "psd"}, {"GIF", "gif"}, {"HDR", "hdr"}, {"PIC", "pic"}};
+nfdfilteritem_t export_filter[5] = {{"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"},
+                                    {"BMP", "bmp"}, {"HDR", "hdr"}};
 
-static void ShowFileMenu(const char* filename, int my_image_width, int my_image_height, file_data)
+
+
+static void ShowFileMenu(const char* filename, int* my_image_width, int* my_image_height, SDL_Texture* my_texture, SDL_Renderer* renderer)
 {
     // Export
     if (ImGui::MenuItem(
@@ -37,11 +49,11 @@ static void ShowFileMenu(const char* filename, int my_image_width, int my_image_
                 if (file_extension == "png")
                 {
                     // TODO: figure out with channels's thing
-                    stbi_write_png(filename, my_image_width, my_image_height, 4, file_data, my_image_width * 4);
+                    stbi_write_png(filename, *my_image_width, *my_image_height, 4, file_data, *my_image_width * 4);
                 }
                 if (file_extension == "jpg")
                 {
-                    stbi_write_jpg(filename, my_image_width, my_image_height, 9, file_data, 100);
+                    stbi_write_jpg(filename, *my_image_width, *my_image_height, 9, file_data, 100);
                 }
                 else {
                     printf("Error: %s\n", file_extension);
@@ -76,7 +88,7 @@ static void ShowFileMenu(const char* filename, int my_image_width, int my_image_
                 }
             
                 filename = outPath.get();
-                bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
+                bool ret = LoadTextureFromFile(filename, renderer, &my_texture, my_image_width, my_image_height);
                 if (!ret) {
                     fprintf(stderr, "Failed to load image: %s\n", filename);
                 }
@@ -89,7 +101,6 @@ static void ShowFileMenu(const char* filename, int my_image_width, int my_image_
             {
                 printf("Error: %s\n", NFD::GetError());
             }
-            IM_ASSERT(ret); 
         }
 
     ImGui::Separator();
@@ -103,7 +114,6 @@ static void ShowFileMenu(const char* filename, int my_image_width, int my_image_
             }
         }(), "Alt+F4")) {}
 }
-
 
 
 static void ShowEditMenu()
@@ -149,7 +159,7 @@ static void ShowEditMenu()
 
 static void ShowFilterMenu()
 {
-    if (ImGui::MenuItem(
+    if (ImGui::BeginMenu(
         [&]() -> const char* {
         switch (language){
             case RUS: return u8"Настройка";
@@ -157,8 +167,10 @@ static void ShowFilterMenu()
             default: return "Configuration";
         }
     }()))
-    if (ImGui::MenuItem("Invert")) {}
-    ImGui::EndMenu();
+    {
+        if (ImGui::MenuItem("Invert")) {}
+        ImGui::EndMenu();
+    }
 }
 
 
