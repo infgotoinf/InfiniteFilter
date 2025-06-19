@@ -52,14 +52,16 @@ IMGUI_DIR     = ./3rdparty/imgui
 BACKENDS_DIR  = $(IMGUI_DIR)/backends
 FREETYPE_DIR2 = $(IMGUI_DIR)/freetype
 STB_DIR       = ./3rdparty/stb
-NFD_DIR       = ./3rdparty/nfd
+IMGUI_FD_DIR  = ./3rdparty/imgui_fd
+    NFD_DIR       = ./3rdparty/nfd
 SDL2_DIR      = C:/msys64/ucrt64/include/SDL2
 FREETYPE_DIR  = C:/msys64/ucrt64/include/freetype2
 
 
 SOURCES := $(shell find $(SRC_DIR) -name '*.cpp') \
            $(shell find $(IMGUI_DIR) -name '*.cpp')\
-           $(shell find $(NFD_DIR) -name '*.cpp')
+           $(shell find $(NFD_DIR) -name '*.cpp')\
+           $(shell find $(IMGUI_FD_DIR) -name '*.cpp')
 
 SOURCES := $(basename $(notdir $(SOURCES)))
 OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
@@ -70,7 +72,8 @@ CXXFLAGS = -std=c++11 \
            -I$(BACKENDS_DIR) \
            -I$(FREETYPE_DIR2) \
            -I$(STB_DIR) \
-           -I$(NFD_DIR) \
+              -I$(NFD_DIR) \
+           -I$(IMGUI_FD_DIR) \
            -I$(SDL2_DIR) \
            -I$(FREETYPE_DIR)
 
