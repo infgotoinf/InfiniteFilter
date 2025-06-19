@@ -130,6 +130,18 @@ bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Text
 }
 
 
+
+    // show the dialog
+    NFD::UniquePathU8 outPath;
+    nfdfilteritem_t import_filter[9] = {{"Image files", "jpg,png,tga,bmp,psd,gif,hdr,pic"},
+                                {"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"}, {"BMP", "bmp"},
+                                {"PSD", "psd"}, {"GIF", "gif"}, {"HDR", "hdr"}, {"PIC", "pic"}};
+    nfdfilteritem_t export_filter[5] = {{"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"},
+                                {"BMP", "bmp"}, {"HDR", "hdr"}};
+
+
+
+
 void renderWithTransparency(SDL_Renderer* renderer, ImGuiIO& io, int transparent_colorref)
 {
     ImGui::Render();
@@ -236,30 +248,10 @@ int main(int, char**)
 
     NFD::Guard nfdGuard;
 
-
-    // Our state
-    const char* filename = u8"../assets/MyImage01.jpg";
-    SDL_Texture* my_texture;
-    int my_image_width, my_image_height;
-    bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
-    IM_ASSERT(ret);
-
-
-
-
-    // show the dialog
-    NFD::UniquePathU8 outPath;
-    nfdfilteritem_t import_filter[9] = {{"Image files", "jpg,png,tga,bmp,psd,gif,hdr,pic"},
-                                {"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"}, {"BMP", "bmp"},
-                                {"PSD", "psd"}, {"GIF", "gif"}, {"HDR", "hdr"}, {"PIC", "pic"}};
-    nfdfilteritem_t export_filter[5] = {{"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"},
-                                {"BMP", "bmp"}, {"HDR", "hdr"}};
-
-
-
 //---------------------------------------------------------------------------------
 //          STYLE EDITING
 //---------------------------------------------------------------------------------
+
     ImVec4* colors = ImGui::GetStyle().Colors;
     
     colors[ImGuiCol_TextDisabled]         = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
@@ -296,16 +288,10 @@ int main(int, char**)
     colors[ImGuiCol_Tab]                  = ImVec4(0.32f, 0.32f, 0.32f, 0.40f);
     colors[ImGuiCol_TabSelected]          = ImVec4(0.64f, 0.64f, 0.64f, 0.80f);
 
-
-    
-
     ImGuiStyle& style = ImGui::GetStyle();
-    style.PopupRounding  = 3.0f;
     style.GrabRounding   = 3.0f;
     style.FrameRounding  = 3.0f;
 
-    // style.Colors[ImGuiCol_WindowBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.5f);
-    // style.Colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
 //---------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
 
@@ -315,6 +301,15 @@ int main(int, char**)
     int height = dm.h; 
     SDL_SetWindowSize(window, width, height);
     SDL_SetWindowPosition(window, 0, 0);
+
+
+    // Our state
+    SDL_Renderer* renderer;
+    const char* filename = u8"../assets/MyImage01.jpg";
+    SDL_Texture* my_texture;
+    int my_image_width, my_image_height;
+    bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
+
 
     // Main loop
     bool done = false;
@@ -345,7 +340,6 @@ int main(int, char**)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-
 //---------------------------------------------------------------------------------
 //          WINDOW RAINBOW
 //---------------------------------------------------------------------------------
@@ -365,9 +359,9 @@ int main(int, char**)
         else if (R <  bright && G <= step   && B >= bright) R += step;
 
         colors[ImGuiCol_WindowBg] = ImVec4(R, G, B, 1.0f);
-//---------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------
 
+//---------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
 
         static int f = 0;
 
@@ -376,6 +370,9 @@ int main(int, char**)
         window_flags |= ImGuiWindowFlags_NoScrollbar;
         window_flags |= ImGuiWindowFlags_NoResize;
         window_flags |= ImGuiWindowFlags_MenuBar;
+
+//---------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
 
         ImGui::Begin("Image Render", nullptr, window_flags);
         if (ImGui::BeginMenuBar())
@@ -406,6 +403,19 @@ int main(int, char**)
                 ShowEditMenu();
                 ImGui::EndMenu();
             }
+            // Filter menu
+            if (ImGui::BeginMenu(
+                [&]() -> const char* {
+                    switch (language){
+                        case RUS: return u8"Фильтр";
+                        case ENG:
+                        default: return "Filter";
+                    }
+                }()))
+            {
+                ShowFilterMenu();
+                ImGui::EndMenu();
+            }
             // Settings menu
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
@@ -416,7 +426,7 @@ int main(int, char**)
                     }
                 }()))
             {
-                ShowSettingsWindow();
+                ShowSettingsMenu();
                 ImGui::EndMenu();
             }
             // Help menu
@@ -469,75 +479,6 @@ int main(int, char**)
             ImGui::End();
         }
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        //     if (ImGui::MenuItem("Load")) {
-        //         nfdresult_t result = NFD::OpenDialog(outPath, import_filter, 9);
-        //         if (result == NFD_OKAY)
-        //         {
-        //             // Destroy previous texture before loading new one
-        //             if (my_texture) {
-        //                 SDL_DestroyTexture(my_texture);
-        //                 my_texture = nullptr;
-        //             }
-                
-        //             filename = outPath.get();
-        //             bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
-        //             if (!ret) {
-        //                 fprintf(stderr, "Failed to load image: %s\n", filename);
-        //             }
-        //         }
-        //         else if (result == NFD_CANCEL)
-        //         {
-        //             puts("User pressed cancel.");
-        //         }
-        //         else 
-        //         {
-        //             printf("Error: %s\n", NFD::GetError());
-        //         }
-        //         IM_ASSERT(ret);
-        //     };
-        //     if (ImGui::MenuItem("Export")) {
-        //         nfdresult_t result = NFD::SaveDialog(outPath, export_filter, 5);
-        //         if (result == NFD_OKAY)
-        //         {
-        //             filename = outPath.get();
-        //             std::string file_extension = filename;
-        //             size_t i = file_extension.rfind('.', file_extension.length());
-        //             file_extension.substr(i+1, file_extension.length() - i);
-        //             if (file_extension == "png")
-        //             {
-        //                 // TODO: figure out with channels's thing
-        //                 stbi_write_png(filename, my_image_width, my_image_height, 4, file_data, my_image_width * 4);
-        //             }
-        //             if (file_extension == "jpg")
-        //             {
-        //                 stbi_write_jpg(filename, my_image_width, my_image_height, 9, file_data, 100);
-        //             }
-        //             else {
-        //                 printf("Error: %s\n", file_extension);
-        //             }
-        //         }
-        //         else if (result == NFD_CANCEL)
-        //         {
-        //             puts("User pressed cancel.");
-        //         }
-        //         else 
-        //         {
-        //             printf("Error: %s\n", NFD::GetError());
-        //         }
-        //     };
-        //     if (ImGui::BeginMenu("Filters"))
-        //     {
-        //         if (ImGui::MenuItem("Invert")) {
-        //             for (size_t i = 0; i < my_image_width * my_image_height; ++i)
-        //             {
-        //                 file_data[i];
-        //             }
-
-        //         }
-        //         ImGui::EndMenu();
-        //     }
-        //     ImGui::EndMenuBar();
-        // }
 
         // ImGui::Text("pointer = %p", my_texture);
         // ImGui::Text("size = %d x %d", my_image_width, my_image_height);

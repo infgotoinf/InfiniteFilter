@@ -15,63 +15,82 @@ ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
 
-
-static void ShowFileMenu()
+static void ShowFileMenu(const char* filename, int my_image_width, int my_image_height, file_data)
 {
-    // New..
+    // Export
     if (ImGui::MenuItem(
         [&]() -> const char* {
             switch (language){
-                case RUS: return u8"Новый..";
+                case RUS: return u8"Экспортировать";
                 case ENG:
-                default:  return "New..";
+                default:  return "Export";
             }
-        }(), "Ctrl+N"))
+        }(), "Ctrl+S"))
         {
-            show_new_window = true;
+            nfdresult_t result = NFD::SaveDialog(outPath, export_filter, 5);
+            if (result == NFD_OKAY)
+            {
+                filename = outPath.get();
+                std::string file_extension = filename;
+                size_t i = file_extension.rfind('.', file_extension.length());
+                file_extension.substr(i+1, file_extension.length() - i);
+                if (file_extension == "png")
+                {
+                    // TODO: figure out with channels's thing
+                    stbi_write_png(filename, my_image_width, my_image_height, 4, file_data, my_image_width * 4);
+                }
+                if (file_extension == "jpg")
+                {
+                    stbi_write_jpg(filename, my_image_width, my_image_height, 9, file_data, 100);
+                }
+                else {
+                    printf("Error: %s\n", file_extension);
+                }
+            }
+            else if (result == NFD_CANCEL)
+            {
+                puts("User pressed cancel.");
+            }
+            else 
+            {
+                printf("Error: %s\n", NFD::GetError());
+            }
         }
-    // Open..
+    // Load
     if (ImGui::MenuItem(
         [&]() -> const char* {
             switch (language){
-                case RUS: return u8"Открыть..";
+                case RUS: return u8"Загрузить";
                 case ENG:
-                default:  return "Open..";
+                default:  return "Load";
             }
-        }(), "Ctrl+O")) {}
-    // Open Recent..
-    if (ImGui::BeginMenu(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Открыть Новый..";
-                case ENG:
-                default:  return "Open Recent..";
+        }(), "Ctrl+D"))
+        {
+           nfdresult_t result = NFD::OpenDialog(outPath, import_filter, 9);
+            if (result == NFD_OKAY)
+            {
+                // Destroy previous texture before loading new one
+                if (my_texture) {
+                    SDL_DestroyTexture(my_texture);
+                    my_texture = nullptr;
+                }
+            
+                filename = outPath.get();
+                bool ret = LoadTextureFromFile(filename, renderer, &my_texture, &my_image_width, &my_image_height);
+                if (!ret) {
+                    fprintf(stderr, "Failed to load image: %s\n", filename);
+                }
             }
-        }()))
-    {
-        ImGui::MenuItem("fish_hat.c");
-        ImGui::MenuItem("fish_hat.inl");
-        ImGui::MenuItem("fish_hat.h");
-        ImGui::EndMenu();
-    }
-    // Save
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Сохранить";
-                case ENG:
-                default:  return "Save";
+            else if (result == NFD_CANCEL)
+            {
+                puts("User pressed cancel.");
             }
-        }(), "Ctrl+S")) {}
-    // Save As..
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Сохранить Как..";
-                case ENG:
-                default:  return "Save As..";
+            else 
+            {
+                printf("Error: %s\n", NFD::GetError());
             }
-        }(), "Ctrl+Shift+S")) {}
+            IM_ASSERT(ret); 
+        }
 
     ImGui::Separator();
     // Quit
@@ -107,16 +126,6 @@ static void ShowEditMenu()
             default:  return "Redo";
         }
     }(), "Ctrl+Shift+Z", false, false)) {} // Disabled item
-    // Cut
-    ImGui::Separator();
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Вырезать";
-            case ENG:
-            default:  return "Cut";
-        }
-    }(), "Ctrl+X")) {}
     // Copy
     if (ImGui::MenuItem(
         [&]() -> const char* {
@@ -138,8 +147,22 @@ static void ShowEditMenu()
 }
 
 
+static void ShowFilterMenu()
+{
+    if (ImGui::MenuItem(
+        [&]() -> const char* {
+        switch (language){
+            case RUS: return u8"Настройка";
+            case ENG:
+            default: return "Configuration";
+        }
+    }()))
+    if (ImGui::MenuItem("Invert")) {}
+    ImGui::EndMenu();
+}
 
-static void ShowSettingsWindow()
+
+static void ShowSettingsMenu()
 {
     // Configuration
     if (ImGui::MenuItem(
