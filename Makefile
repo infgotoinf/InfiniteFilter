@@ -49,18 +49,16 @@ DEBUG   = DEBUG_Infinite_Filter
 SRC_DIR       = ./infinitefilter/src
 BUILD_DIR     = ./build
 IMGUI_DIR     = ./3rdparty/imgui
+IMGUI_FD_DIR  = ./3rdparty/imgui_fd
 BACKENDS_DIR  = $(IMGUI_DIR)/backends
 FREETYPE_DIR2 = $(IMGUI_DIR)/freetype
 STB_DIR       = ./3rdparty/stb
-IMGUI_FD_DIR  = ./3rdparty/imgui_fd
-    NFD_DIR       = ./3rdparty/nfd
 SDL2_DIR      = C:/msys64/ucrt64/include/SDL2
 FREETYPE_DIR  = C:/msys64/ucrt64/include/freetype2
 
 
 SOURCES := $(shell find $(SRC_DIR) -name '*.cpp') \
            $(shell find $(IMGUI_DIR) -name '*.cpp')\
-           $(shell find $(NFD_DIR) -name '*.cpp')\
            $(shell find $(IMGUI_FD_DIR) -name '*.cpp')
 
 SOURCES := $(basename $(notdir $(SOURCES)))
@@ -69,11 +67,10 @@ OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
 
 CXXFLAGS = -std=c++11 \
            -I$(IMGUI_DIR) \
+           -I$(IMGUI_FD_DIR) \
            -I$(BACKENDS_DIR) \
            -I$(FREETYPE_DIR2) \
            -I$(STB_DIR) \
-              -I$(NFD_DIR) \
-           -I$(IMGUI_FD_DIR) \
            -I$(SDL2_DIR) \
            -I$(FREETYPE_DIR)
 
@@ -92,7 +89,7 @@ LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreetype -lpng -lharfbuzz -lgraphite2 \
           -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
           -Wl,--dynamicbase -Wl,--nxcompat \
           -static-libstdc++ -static-libgcc -static -lwinpthread -lsetupapi -lhid \
-          -lwinmm -limm32 -lshell32 -lole32 -loleaut32 -luuid -lversion
+          -lwinmm -limm32 -lshell32 -lole32 -loleaut32 -luuid -lversion -msse2
 
 ##---------------------------------------------------------------------------------
 ##                         DEBUG AND RELEASE REALISATION
@@ -144,16 +141,13 @@ $(BUILD_DIR)/$(build)_%.o:$(SRC_DIR)/%.cpp
 $(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+$(BUILD_DIR)/$(build)_%.o:$(IMGUI_FD_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 $(BUILD_DIR)/$(build)_%.o:$(BACKENDS_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/$(build)_%.o:$(NFD_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/$(build)_%.o:$(IMGUI_FD_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 

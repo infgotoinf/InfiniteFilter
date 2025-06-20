@@ -11,23 +11,84 @@
 enum Languages {ENG, RUS};
 
 int language = ENG;
+bool show_fd_window = false;
 bool show_demo_window = true;
-bool show_new_window = false;
 bool show_config_window = false;
 bool show_credits_window = false;
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
-NFD::UniquePathU8 outPath;
-nfdfilteritem_t import_filter[9] = {{"Image files", "jpg,png,tga,bmp,psd,gif,hdr,pic"},
-                                    {"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"}, {"BMP", "bmp"},
-                                    {"PSD", "psd"}, {"GIF", "gif"}, {"HDR", "hdr"}, {"PIC", "pic"}};
-nfdfilteritem_t export_filter[5] = {{"JPG", "jpg"}, {"PNG", "png"}, {"TGA", "tga"},
-                                    {"BMP", "bmp"}, {"HDR", "hdr"}};
+
+void drawGui2(const char* filename, int* my_image_width, int* my_image_height, SDL_Texture* my_texture, SDL_Renderer* renderer) { 
+    // open Dialog Simple
+    IGFD::FileDialogConfig config;config.path = ".";
+    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".jpg,.png,.tga,.bmp,.hdr", config);
+  
+    // display
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) { // => will show a dialog
+        if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
+            //std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+            filename = ImGuiFileDialog::Instance()->GetCurrentPath().c_str();
+            std::string file_extension = filename;
+
+            size_t i = file_extension.rfind('.', file_extension.length());
+            file_extension.substr(i+1, file_extension.length() - i);
+            if (file_extension == "png")
+            {
+                // TODO: figure out with channels's thing
+                stbi_write_png(filename, *my_image_width, *my_image_height, 4, file_data, *my_image_width * 4);
+            }
+            if (file_extension == "jpg")
+            {
+                stbi_write_jpg(filename, *my_image_width, *my_image_height, 9, file_data, 100);
+            }
+            else {
+                printf("Error: %s\n", file_extension);
+            }
+        }
+
+        // close
+        ImGuiFileDialog::Instance()->Close();
+        show_fd_window = false;
+    }
+}
 
 
+void drawGui(std::string* filename, int* my_image_width, int* my_image_height, SDL_Texture** my_texture, SDL_Renderer* renderer) { 
+    // open Dialog Simple
+    IGFD::FileDialogConfig config;config.path = ".";
+    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".jpg,.png,.tga,.bmp,.psd,.gif,.hdr,.pic", config);
+  
+    // display
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) { // => will show a dialog
+        if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
+            // Destroy previous texture before loading new one
+            if (*my_texture) {
+                SDL_DestroyTexture(*my_texture);
+                *my_texture = nullptr;
+            }
+            *filename = ImGuiFileDialog::Instance()->GetFilePathName();
 
-static void ShowFileMenu(const char* filename, int* my_image_width, int* my_image_height, SDL_Texture* my_texture, SDL_Renderer* renderer)
+            bool ret = LoadTextureFromFile((*filename).c_str(), renderer, my_texture, my_image_width, my_image_height);
+            if (!ret) {
+                fprintf(stderr, "Failed to load image: %s\n", filename);
+                *my_image_width = 0;
+                *my_image_height = 0;
+            }
+        }
+
+        // close
+        ImGuiFileDialog::Instance()->Close();
+        show_fd_window = false;
+    }
+}
+
+
+//---------------------------------------------------------------------------------
+//          FILE MENU
+//---------------------------------------------------------------------------------
+
+static void ShowFileMenu()
 {
     // Export
     if (ImGui::MenuItem(
@@ -39,34 +100,7 @@ static void ShowFileMenu(const char* filename, int* my_image_width, int* my_imag
             }
         }(), "Ctrl+S"))
         {
-            nfdresult_t result = NFD::SaveDialog(outPath, export_filter, 5);
-            if (result == NFD_OKAY)
-            {
-                filename = outPath.get();
-                std::string file_extension = filename;
-                size_t i = file_extension.rfind('.', file_extension.length());
-                file_extension.substr(i+1, file_extension.length() - i);
-                if (file_extension == "png")
-                {
-                    // TODO: figure out with channels's thing
-                    stbi_write_png(filename, *my_image_width, *my_image_height, 4, file_data, *my_image_width * 4);
-                }
-                if (file_extension == "jpg")
-                {
-                    stbi_write_jpg(filename, *my_image_width, *my_image_height, 9, file_data, 100);
-                }
-                else {
-                    printf("Error: %s\n", file_extension);
-                }
-            }
-            else if (result == NFD_CANCEL)
-            {
-                puts("User pressed cancel.");
-            }
-            else 
-            {
-                printf("Error: %s\n", NFD::GetError());
-            }
+            show_fd_window = true;
         }
     // Load
     if (ImGui::MenuItem(
@@ -78,29 +112,7 @@ static void ShowFileMenu(const char* filename, int* my_image_width, int* my_imag
             }
         }(), "Ctrl+D"))
         {
-           nfdresult_t result = NFD::OpenDialog(outPath, import_filter, 9);
-            if (result == NFD_OKAY)
-            {
-                // Destroy previous texture before loading new one
-                if (my_texture) {
-                    SDL_DestroyTexture(my_texture);
-                    my_texture = nullptr;
-                }
-            
-                filename = outPath.get();
-                bool ret = LoadTextureFromFile(filename, renderer, &my_texture, my_image_width, my_image_height);
-                if (!ret) {
-                    fprintf(stderr, "Failed to load image: %s\n", filename);
-                }
-            }
-            else if (result == NFD_CANCEL)
-            {
-                puts("User pressed cancel.");
-            }
-            else 
-            {
-                printf("Error: %s\n", NFD::GetError());
-            }
+            show_fd_window = true;
         }
 
     ImGui::Separator();
@@ -115,6 +127,9 @@ static void ShowFileMenu(const char* filename, int* my_image_width, int* my_imag
         }(), "Alt+F4")) {}
 }
 
+//---------------------------------------------------------------------------------
+//          EDIT MENU
+//---------------------------------------------------------------------------------
 
 static void ShowEditMenu()
 {
@@ -136,43 +151,44 @@ static void ShowEditMenu()
             default:  return "Redo";
         }
     }(), "Ctrl+Shift+Z", false, false)) {} // Disabled item
-    // Copy
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Копировать";
-            case ENG:
-            default:  return "Copy";
-        }
-    }(), "Ctrl+C")) {}
-    // Paste
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Вставить";
-            case ENG:
-            default:  return "Paste";
-        }
-    }(), "Ctrl+V")) {}
+    // // Copy
+    // if (ImGui::MenuItem(
+    //     [&]() -> const char* {
+    //     switch (language){
+    //         case RUS: return u8"Копировать";
+    //         case ENG:
+    //         default:  return "Copy";
+    //     }
+    // }(), "Ctrl+C")) {}
+    // // Paste
+    // if (ImGui::MenuItem(
+    //     [&]() -> const char* {
+    //     switch (language){
+    //         case RUS: return u8"Вставить";
+    //         case ENG:
+    //         default:  return "Paste";
+    //     }
+    // }(), "Ctrl+V")) {}
 }
 
+//---------------------------------------------------------------------------------
+//          FILTER MENU
+//---------------------------------------------------------------------------------
 
 static void ShowFilterMenu()
 {
-    if (ImGui::BeginMenu(
-        [&]() -> const char* {
+    if (ImGui::MenuItem([&]() -> const char* {
         switch (language){
-            case RUS: return u8"Настройка";
+            case RUS: return u8"Инвертация цвета";
             case ENG:
-            default: return "Configuration";
+            default: return "Invert";
         }
-    }()))
-    {
-        if (ImGui::MenuItem("Invert")) {}
-        ImGui::EndMenu();
-    }
+    }())) {}
 }
 
+//---------------------------------------------------------------------------------
+//          SETTINGS MENU
+//---------------------------------------------------------------------------------
 
 static void ShowSettingsMenu()
 {
@@ -208,7 +224,9 @@ static void ShowSettingsMenu()
     }
 }
 
-
+//---------------------------------------------------------------------------------
+//          HELP MENU
+//---------------------------------------------------------------------------------
 
 static void ShowHelpMenu()
 {
@@ -260,4 +278,13 @@ static void ShowHelpMenu()
             default: return "Demo Window";
         }
     }(), &show_demo_window)) {}
+    // Demo File Dialog
+    if (ImGui::Checkbox(
+        [&]() -> const char* {
+        switch (language){
+            case RUS: return u8"Тестировочное файловое окно";
+            case ENG:
+            default: return "Demo File Dialog";
+        }
+    }(), &show_fd_window)) {}
 }

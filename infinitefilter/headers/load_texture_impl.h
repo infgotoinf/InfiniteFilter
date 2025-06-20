@@ -88,11 +88,11 @@ bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Text
     fclose(f);
     
     if (read_size != static_cast<size_t>(file_size)) {
-        // delete[] file_data;
+        delete[] file_data;
         return false;
     }
     
     bool ret = LoadTextureFromMemory(file_data, file_size, renderer, out_texture, out_width, out_height);
-    // delete[] file_data;
+    delete[] file_data;
     return ret;
 }
