@@ -54,13 +54,16 @@ void drawGui2(const char* filename, int* my_image_width, int* my_image_height, S
 }
 
 
-void drawGui(std::string* filename, int* my_image_width, int* my_image_height, SDL_Texture** my_texture, SDL_Renderer* renderer) { 
+void drawGui(std::string* filename, int* my_image_width, int* my_image_height, SDL_Texture** my_texture, SDL_Renderer* renderer, int display_w, int display_h) { 
     // open Dialog Simple
+    ImVec2 maxSize = ImVec2((float)display_w, (float)display_h);
+    ImVec2 minSize = ImVec2((float)600, (float)350);
     IGFD::FileDialogConfig config;config.path = ".";
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".jpg,.png,.tga,.bmp,.psd,.gif,.hdr,.pic", config);
   
+
     // display
-    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) { // => will show a dialog
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", 0, minSize, maxSize)) { // => will show a dialog
         if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
             // Destroy previous texture before loading new one
             if (*my_texture) {

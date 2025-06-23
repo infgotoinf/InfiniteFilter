@@ -149,9 +149,9 @@ int main(int, char**)
     // Making app to take entire screen
     SDL_DisplayMode dm;
     SDL_GetCurrentDisplayMode(0, &dm);
-    int width = dm.w;
-    int height = dm.h; 
-    SDL_SetWindowSize(window, width, height);
+    int display_width = dm.w;
+    int display_height = dm.h; 
+    SDL_SetWindowSize(window, display_width, display_height);
     SDL_SetWindowPosition(window, 0, 0);
 
 
@@ -219,11 +219,14 @@ int main(int, char**)
 
         static int f = 0;
 
-        ImGuiWindowFlags window_flags = 0;
-        window_flags |= ImGuiWindowFlags_NoScrollbar;   // Disable scrollbar
-        window_flags |= ImGuiWindowFlags_MenuBar;       // Enable menu bar
+        ImGuiWindowFlags main_window_flags = 0;
+        main_window_flags |= ImGuiWindowFlags_NoScrollbar;  // Disable scrollbar
+        main_window_flags |= ImGuiWindowFlags_MenuBar;      // Enable menu bar
 
-        ImGui::Begin("Image Render", nullptr, window_flags);
+        ImGuiWindowFlags config_window_flags = 0;
+        config_window_flags |= ImGuiWindowFlags_NoResize;   // Disable resize
+
+        ImGui::Begin("Image Render", nullptr, main_window_flags);
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //          MENU BAR
@@ -322,11 +325,12 @@ int main(int, char**)
             ImGui::ShowDemoWindow(&show_demo_window);
 
         if (show_fd_window)
-            drawGui(&filename, &my_image_width, &my_image_height, &my_texture, renderer);
+            drawGui(&filename, &my_image_width, &my_image_height, &my_texture, renderer, display_width, display_height);
 
         if (show_config_window)
         { // Configuratuion window
-            ImGui::Begin("Configuration", &show_config_window);
+            ImGui::SetNextWindowSize(ImVec2(450, 115));
+            ImGui::Begin("Configuration", &show_config_window, config_window_flags);
             ImGui::SeparatorText("Theme settings");
             if (ImGui::SliderFloat("Colour brightness", &color_brightness, 0.0f, 0.5f, "%.2f"))
             {
