@@ -8,6 +8,7 @@
 #include "../../3rdparty/imgui/backends/imgui_impl_sdlrenderer2.h"
 #include "../../assets/fonts/ProggyVector.h"
 
+#define DEVELOPER_OPTIONS // Disable this for a release
 #include "../headers/main_window_bar.h"
 
 
@@ -151,9 +152,9 @@ int main(int, char**)
     // Making app to take entire screen
     SDL_DisplayMode dm;
     SDL_GetCurrentDisplayMode(0, &dm);
-    int width = dm.w;
-    int height = dm.h; 
-    SDL_SetWindowSize(window, width, height);
+    int display_width = dm.w;
+    int display_height = dm.h; 
+    SDL_SetWindowSize(window, display_width, display_height);
     SDL_SetWindowPosition(window, 0, 0);
 
 
@@ -219,13 +220,13 @@ int main(int, char**)
 //          MAIN WINDOW
 //---------------------------------------------------------------------------------
 
-        static int f = 0;
+        // static int f = 0;
 
-        ImGuiWindowFlags window_flags = 0;
-        window_flags |= ImGuiWindowFlags_NoScrollbar;   // Disable scrollbar
-        window_flags |= ImGuiWindowFlags_MenuBar;       // Enable menu bar
+        ImGuiWindowFlags main_window_flags = 0;
+        main_window_flags |= ImGuiWindowFlags_NoScrollbar;  // Disable scrollbar
+        main_window_flags |= ImGuiWindowFlags_MenuBar;      // Enable menu bar
 
-        ImGui::Begin("Image Render", nullptr, window_flags);
+        ImGui::Begin("Image Render", nullptr, main_window_flags);
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //          MENU BAR
@@ -246,19 +247,19 @@ int main(int, char**)
                 ShowFileMenu();
                 ImGui::EndMenu();
             }
-            // Edit menu
-            if (ImGui::BeginMenu(
-                [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Правка";
-                        case ENG:
-                        default: return "Edit";
-                    }
-                }()))
-            {
-                ShowEditMenu();
-                ImGui::EndMenu();
-            }
+            // // Edit menu
+            // if (ImGui::BeginMenu(
+            //     [&]() -> const char* {
+            //         switch (language){
+            //             case RUS: return u8"Правка";
+            //             case ENG:
+            //             default: return "Edit";
+            //         }
+            //     }()))
+            // {
+            //     ShowEditMenu();
+            //     ImGui::EndMenu();
+            // }
             // Filter menu
             if (ImGui::BeginMenu(
                 [&]() -> const char* {
@@ -309,26 +310,32 @@ int main(int, char**)
         // ImGui::Text("size = %d x %d", my_image_width, my_image_height);
         // ImGui::Text(filename.c_str());
 
-        ImGui::SliderInt("Image size", &f, -10, 10);
-        //ImGui::Image((ImTextureID)(intptr_t)my_texture, ImVec2((float)my_image_width, (float)my_image_height));
-        ImGui::Image((ImTextureID)(intptr_t)my_texture, ImVec2(500.0f, 500.0f));
+        // ImGui::SliderInt("Image size", &f, -10, 10);
+        // ImGui::Image((ImTextureID)(intptr_t)my_texture, ImVec2((float)my_image_width, (float)my_image_height));
+        
+
+        ImVec2 image_window_size = ImVec2(my_image_width * (ImGui::GetWindowSize().y / my_image_height) - 60, ImGui::GetWindowSize().y - 60);
+
+        ImGui::Image((ImTextureID)(intptr_t)my_texture, image_window_size);
         ImGui::End();
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //          CHILD WINDOWS
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-        ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(500, 400));
 
+    #ifdef DEVELOPER_OPTIONS
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
+    #endif
 
         if (show_fd_window)
-            drawGui(&filename, &my_image_width, &my_image_height, &my_texture, renderer);
+            drawGui(&filename, &my_image_width, &my_image_height, &my_texture, renderer, display_width, display_height);
 
         if (show_config_window)
         { // Configuratuion window
-            ImGui::Begin("Configuration", &show_config_window);
+            ImGui::Begin("Configuration", &show_config_window, ImGuiWindowFlags_AlwaysAutoResize);
             ImGui::SeparatorText("Theme settings");
             if (ImGui::SliderFloat("Colour brightness", &color_brightness, 0.0f, 0.5f, "%.2f"))
             {
@@ -344,7 +351,7 @@ int main(int, char**)
         }
         if (show_credits_window)
         { // Credits window
-            ImGui::Begin("Credits", &show_credits_window);
+            ImGui::Begin("Credits", &show_credits_window, ImGuiWindowFlags_AlwaysAutoResize);
             ImGui::Text("...");
             ImGui::End();
         }
