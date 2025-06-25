@@ -12,7 +12,9 @@ enum Languages {ENG, RUS};
 
 int language = ENG;
 bool show_fd_window = false;
+#ifdef DEVELOPER_OPTIONS
 bool show_demo_window = true;
+#endif
 bool show_config_window = false;
 bool show_credits_window = false;
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -134,26 +136,26 @@ static void ShowFileMenu()
 //          EDIT MENU
 //---------------------------------------------------------------------------------
 
-static void ShowEditMenu()
-{
-    // Undo
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Отменить";
-            case ENG:
-            default:  return "Undo";
-        }
-    }(), "Ctrl+Z")) {}
-    // Redo
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Повторить";
-            case ENG:
-            default:  return "Redo";
-        }
-    }(), "Ctrl+Shift+Z", false, false)) {} // Disabled item
+// static void ShowEditMenu()
+// {
+    // // Undo
+    // if (ImGui::MenuItem(
+    //     [&]() -> const char* {
+    //     switch (language){
+    //         case RUS: return u8"Отменить";
+    //         case ENG:
+    //         default:  return "Undo";
+    //     }
+    // }(), "Ctrl+Z")) {}
+    // // Redo
+    // if (ImGui::MenuItem(
+    //     [&]() -> const char* {
+    //     switch (language){
+    //         case RUS: return u8"Повторить";
+    //         case ENG:
+    //         default:  return "Redo";
+    //     }
+    // }(), "Ctrl+Shift+Z", false, false)) {} // Disabled item
     // // Copy
     // if (ImGui::MenuItem(
     //     [&]() -> const char* {
@@ -172,7 +174,7 @@ static void ShowEditMenu()
     //         default:  return "Paste";
     //     }
     // }(), "Ctrl+V")) {}
-}
+// }
 
 //---------------------------------------------------------------------------------
 //          FILTER MENU
@@ -233,13 +235,13 @@ static void ShowSettingsMenu()
 
 static void ShowHelpMenu()
 {
-    // Documentation
+    // User Manual
     if (ImGui::MenuItem(
         [&]() -> const char* {
         switch (language){
-            case RUS: return u8"Документация";
+            case RUS: return u8"Руководство Пользователя";
             case ENG:
-            default: return "Documentation";
+            default: return "User Manual";
         }
     }()))
     {
@@ -272,6 +274,7 @@ static void ShowHelpMenu()
     {
         show_credits_window = true;
     }
+#ifdef DEVELOPER_OPTIONS
     // Demo Window
     if (ImGui::Checkbox(
         [&]() -> const char* {
@@ -290,4 +293,5 @@ static void ShowHelpMenu()
             default: return "Demo File Dialog";
         }
     }(), &show_fd_window)) {}
+#endif
 }
