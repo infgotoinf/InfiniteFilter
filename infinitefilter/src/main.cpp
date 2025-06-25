@@ -36,6 +36,8 @@ int main(int, char**)
 //          SETUP
 //---------------------------------------------------------------------------------
 
+    lua_init();
+
     // Setup SDL
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
@@ -357,6 +359,8 @@ int main(int, char**)
     if (my_texture) {
         SDL_DestroyTexture(my_texture);
     }
+
+    lua_close(L);
 
     // Cleanup
     ImGui_ImplSDLRenderer2_Shutdown();

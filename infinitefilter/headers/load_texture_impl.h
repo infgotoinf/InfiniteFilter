@@ -20,14 +20,14 @@
 #endif
 
 
-unsigned char* file_data;
+uint8_t* file_data;
 
 bool LoadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* renderer, SDL_Texture** out_texture, int* out_width, int* out_height)
 {
     int image_width = 0;
     int image_height = 0;
     int channels = 4;
-    unsigned char* image_data = stbi_load_from_memory((const unsigned char*)data, (int)data_size, &image_width, &image_height, NULL, 4);
+    uint8_t* image_data = stbi_load_from_memory((const uint8_t*)data, (int)data_size, &image_width, &image_height, NULL, 4);
     if (image_data == nullptr)
     {
         fprintf(stderr, "Failed to load image: %s\n", stbi_failure_reason());
@@ -83,7 +83,7 @@ bool LoadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Text
     }
     
     fseek(f, 0, SEEK_SET);
-    file_data = new unsigned char[file_size];
+    file_data = new uint8_t[file_size];
     size_t read_size = fread(file_data, 1, file_size, f);
     fclose(f);
     

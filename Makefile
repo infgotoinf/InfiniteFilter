@@ -48,6 +48,7 @@ DEBUG   = DEBUG_Infinite_Filter
 
 SRC_DIR       = ./infinitefilter/src
 BUILD_DIR     = ./build
+LUAJIT_DIR    = ./3rdparty/luajit
 IMGUI_DIR     = ./3rdparty/imgui
 IMGUI_FD_DIR  = ./3rdparty/imgui_fd
 BACKENDS_DIR  = $(IMGUI_DIR)/backends
@@ -65,14 +66,15 @@ SOURCES := $(basename $(notdir $(SOURCES)))
 OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
 
 
-CXXFLAGS = -std=c++11 \
+CXXFLAGS = -std=c++17 \
            -I$(IMGUI_DIR) \
            -I$(IMGUI_FD_DIR) \
            -I$(BACKENDS_DIR) \
            -I$(FREETYPE_DIR2) \
            -I$(STB_DIR) \
            -I$(SDL2_DIR) \
-           -I$(FREETYPE_DIR)
+           -I$(FREETYPE_DIR) \
+           -I$(LUAJIT_DIR)
 
 RELEASE_CXXFLAGS = -g0 -O3 -w -DNDEBUG -flto -fno-rtti -fno-exceptions \
                    -ffunction-sections -fdata-sections -Wl,--gc-sections \
@@ -87,7 +89,7 @@ DEBUG_CXXFLAGS = -g -g3 -O0 -Wall -Wextra -pedantic
 
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreetype -lpng -lharfbuzz -lgraphite2 \
           -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
-          -Wl,--dynamicbase -Wl,--nxcompat \
+          -Wl,--dynamicbase -Wl,--nxcompat -L$(LUAJIT_DIR) -llua51\
           -static-libstdc++ -static-libgcc -static -lwinpthread -lsetupapi -lhid \
           -lwinmm -limm32 -lshell32 -lole32 -loleaut32 -luuid -lversion -msse2
 
@@ -151,15 +153,27 @@ $(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
-all: mkdir $(BUILD_DIR)/$(EXE)
+all: mkdir mkdir_bin mkdir_src $(BUILD_DIR)/$(EXE)
 	@echo $(build) build complete
 
 $(BUILD_DIR)/$(EXE): $(OBJS)
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 
 mkdir:
 	mkdir -p build
+
+mkdir_bin:
+	mkdir -p build/bin
+  cp $(LUAJIT_DIR)/%.dll $(BUILD_DIR)/bin/
+
+mkdir_src:
+	mkdir -p build/src
+  cp infinitefilter/filter_runner.lua $(BUILD_DIR)/src/
+
+mkdir_filters:
+	mkdir -p build/filters
+  cp filters/%.cpp $(BUILD_DIR)/filters/
 
 clean:
 	rm -rf $(BUILD_DIR)

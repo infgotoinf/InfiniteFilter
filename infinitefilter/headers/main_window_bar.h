@@ -5,6 +5,7 @@
 #include <string>
 
 #include "load_texture_impl.h"
+#include "filter_handler.h"
 
 
 
@@ -19,7 +20,7 @@ ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
 
-void drawGui2(const char* filename, int* my_image_width, int* my_image_height, SDL_Texture* my_texture, SDL_Renderer* renderer) { 
+void drawGui2(const char* filename, int* img_width, int* img_height, SDL_Texture* texture, SDL_Renderer* renderer) { 
     // open Dialog Simple
     IGFD::FileDialogConfig config;config.path = ".";
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".jpg,.png,.tga,.bmp,.hdr", config);
@@ -36,11 +37,11 @@ void drawGui2(const char* filename, int* my_image_width, int* my_image_height, S
             if (file_extension == "png")
             {
                 // TODO: figure out with channels's thing
-                stbi_write_png(filename, *my_image_width, *my_image_height, 4, file_data, *my_image_width * 4);
+                stbi_write_png(filename, *img_width, *img_height, 4, file_data, *img_width * 4);
             }
             if (file_extension == "jpg")
             {
-                stbi_write_jpg(filename, *my_image_width, *my_image_height, 9, file_data, 100);
+                stbi_write_jpg(filename, *img_width, *img_height, 9, file_data, 100);
             }
             else {
                 printf("Error: %s\n", file_extension);
@@ -54,7 +55,7 @@ void drawGui2(const char* filename, int* my_image_width, int* my_image_height, S
 }
 
 
-void drawGui(std::string* filename, int* my_image_width, int* my_image_height, SDL_Texture** my_texture, SDL_Renderer* renderer) { 
+void drawGui(std::string* filename, int* img_width, int* img_height, SDL_Texture** texture, SDL_Renderer* renderer) { 
     // open Dialog Simple
     IGFD::FileDialogConfig config;config.path = ".";
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".jpg,.png,.tga,.bmp,.psd,.gif,.hdr,.pic", config);
@@ -63,17 +64,17 @@ void drawGui(std::string* filename, int* my_image_width, int* my_image_height, S
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) { // => will show a dialog
         if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
             // Destroy previous texture before loading new one
-            if (*my_texture) {
-                SDL_DestroyTexture(*my_texture);
-                *my_texture = nullptr;
+            if (*texture) {
+                SDL_DestroyTexture(*texture);
+                *texture = nullptr;
             }
             *filename = ImGuiFileDialog::Instance()->GetFilePathName();
 
-            bool ret = LoadTextureFromFile((*filename).c_str(), renderer, my_texture, my_image_width, my_image_height);
+            bool ret = LoadTextureFromFile((*filename).c_str(), renderer, texture, img_width, img_height);
             if (!ret) {
                 fprintf(stderr, "Failed to load image: %s\n", filename);
-                *my_image_width = 0;
-                *my_image_height = 0;
+                *img_width = 0;
+                *img_height = 0;
             }
         }
 
