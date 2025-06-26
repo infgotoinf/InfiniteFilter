@@ -1,7 +1,6 @@
 #include "../../3rdparty/imgui/imgui.h"
 #include "../../3rdparty/imgui_fd/ImGuiFileDialog.h"
 #include <stdio.h>
-#include <iostream>
 #include <string>
 
 #include "load_texture_impl.h"
@@ -57,7 +56,7 @@ void drawGui2(const char* filename, int* img_width, int* img_height, SDL_Texture
 }
 
 
-void drawGui(std::string* filename, int* img_width, int* img_height, SDL_Texture** texture, SDL_Renderer* renderer) { 
+void drawGui(std::string* filename, int* img_width, int* img_height, SDL_Texture** texture, SDL_Renderer* renderer, int display_w, int display_h) { 
     // open Dialog Simple
     ImVec2 maxSize = ImVec2((float)display_w, (float)display_h);
     ImVec2 minSize = ImVec2((float)600, (float)350);
@@ -181,15 +180,16 @@ static void ShowFileMenu()
 //          FILTER MENU
 //---------------------------------------------------------------------------------
 
-static void ShowFilterMenu()
+static void ShowFilterMenu(SDL_Renderer* renderer, SDL_Texture** texture)
 {
-    if (ImGui::MenuItem([&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Инвертация цвета";
-            case ENG:
-            default: return "Invert";
+    for (const auto& entry : fs::directory_iterator("./filters")) {
+        if (entry.is_regular_file()) {
+            std::string filename = entry.path().filename().string();
+            if (ImGui::MenuItem(filename.c_str())) {
+                filter_image(file_data, img_width, img_height, channels, filename.c_str(), renderer, texture);
+            }
         }
-    }())) {}
+    }
 }
 
 //---------------------------------------------------------------------------------

@@ -21,12 +21,13 @@
 
 
 uint8_t* file_data;
+int img_width, img_height, channels = 3;
 
 bool LoadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* renderer, SDL_Texture** out_texture, int* out_width, int* out_height)
 {
     int image_width = 0;
     int image_height = 0;
-    int channels = 4;
+    int image_channels = 4;
     uint8_t* image_data = stbi_load_from_memory((const uint8_t*)data, (int)data_size, &image_width, &image_height, NULL, 4);
     if (image_data == nullptr)
     {
@@ -34,7 +35,7 @@ bool LoadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* ren
         return false;
     }
 
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)image_data, image_width, image_height, channels * 8, channels * image_width, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)image_data, image_width, image_height, image_channels * 8, image_channels * image_width, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
     if (surface == nullptr)
     {
         fprintf(stderr, "Failed to create SDL surface: %s\n", SDL_GetError());

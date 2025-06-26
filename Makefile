@@ -57,6 +57,8 @@ STB_DIR       = ./3rdparty/stb
 SDL2_DIR      = C:/msys64/ucrt64/include/SDL2
 FREETYPE_DIR  = C:/msys64/ucrt64/include/freetype2
 
+FILTER_FILES := $(wildcard filters/*.cpp)
+
 
 SOURCES := $(shell find $(SRC_DIR) -name '*.cpp') \
            $(shell find $(IMGUI_DIR) -name '*.cpp')\
@@ -89,7 +91,7 @@ DEBUG_CXXFLAGS = -g -g3 -O0 -Wall -Wextra -pedantic
 
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreetype -lpng -lharfbuzz -lgraphite2 \
           -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
-          -Wl,--dynamicbase -Wl,--nxcompat -L$(LUAJIT_DIR) -llua51\
+          -Wl,--dynamicbase -Wl,--nxcompat -L$(LUAJIT_DIR) -l:liblua51.dll.a\
           -static-libstdc++ -static-libgcc -static -lwinpthread -lsetupapi -lhid \
           -lwinmm -limm32 -lshell32 -lole32 -loleaut32 -luuid -lversion -msse2
 
@@ -153,7 +155,7 @@ $(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
-all: mkdir mkdir_bin mkdir_src $(BUILD_DIR)/$(EXE)
+all: mkdir mkdir_bin mkdir_src mkdir_filters $(BUILD_DIR)/$(EXE)
 	@echo $(build) build complete
 
 $(BUILD_DIR)/$(EXE): $(OBJS)
@@ -161,19 +163,21 @@ $(BUILD_DIR)/$(EXE): $(OBJS)
 
 
 mkdir:
-	mkdir -p build
+	mkdir -p $(BUILD_DIR)
 
-mkdir_bin:
-	mkdir -p build/bin
-  cp $(LUAJIT_DIR)/%.dll $(BUILD_DIR)/bin/
+mkdir_bin: mkdir
+	mkdir -p $(BUILD_DIR)/bin
+	cp $(LUAJIT_DIR)/lfs.dll $(BUILD_DIR)/bin/
+	cp $(LUAJIT_DIR)/lua51.dll $(BUILD_DIR)/bin/
+	cp $(LUAJIT_DIR)/liblua51.dll.a $(BUILD_DIR)/bin/
 
-mkdir_src:
-	mkdir -p build/src
-  cp infinitefilter/filter_runner.lua $(BUILD_DIR)/src/
+mkdir_src: mkdir
+	mkdir -p $(BUILD_DIR)/src
+	cp infinitefilter/src/filter_runner.lua $(BUILD_DIR)/src/
 
-mkdir_filters:
-	mkdir -p build/filters
-  cp filters/%.cpp $(BUILD_DIR)/filters/
+mkdir_filters: mkdir
+	mkdir -p $(BUILD_DIR)/filters
+	cp $(FILTER_FILES) $(BUILD_DIR)/filters/
 
 clean:
 	rm -rf $(BUILD_DIR)

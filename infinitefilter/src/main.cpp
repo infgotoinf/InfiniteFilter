@@ -160,9 +160,9 @@ int main(int, char**)
 
     // Our state
     std::string filename = u8"..\\assets\\MyImage01.jpg";
-    SDL_Texture* my_texture;
-    int my_image_width, my_image_height;
-    bool ret = LoadTextureFromFile(filename.c_str(), renderer, &my_texture, &my_image_width, &my_image_height);
+    SDL_Texture* texture;
+    int img_width, img_height, channels;
+    bool ret = LoadTextureFromFile(filename.c_str(), renderer, &texture, &img_width, &img_height);
 
 //=================================================================================
 //      START OF THE MAIN LOOP
@@ -270,7 +270,7 @@ int main(int, char**)
                     }
                 }()))
             {
-                ShowFilterMenu();
+                ShowFilterMenu(renderer, &texture);
                 ImGui::EndMenu();
             }
             // Settings menu
@@ -306,17 +306,17 @@ int main(int, char**)
 //          MAIN WINDOW CONTENT
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-        // ImGui::Text("pointer = %p", my_texture);
-        // ImGui::Text("size = %d x %d", my_image_width, my_image_height);
+        // ImGui::Text("pointer = %p", texture);
+        // ImGui::Text("size = %d x %d", img_width, img_height);
         // ImGui::Text(filename.c_str());
 
         // ImGui::SliderInt("Image size", &f, -10, 10);
-        // ImGui::Image((ImTextureID)(intptr_t)my_texture, ImVec2((float)my_image_width, (float)my_image_height));
+        // ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2((float)img_width, (float)img_height));
         
 
-        ImVec2 image_window_size = ImVec2(my_image_width * (ImGui::GetWindowSize().y / my_image_height) - 60, ImGui::GetWindowSize().y - 60);
+        ImVec2 image_window_size = ImVec2(img_width * (ImGui::GetWindowSize().y / img_height) - 60, ImGui::GetWindowSize().y - 60);
 
-        ImGui::Image((ImTextureID)(intptr_t)my_texture, image_window_size);
+        ImGui::Image((ImTextureID)(intptr_t)texture, image_window_size);
         ImGui::End();
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -331,7 +331,7 @@ int main(int, char**)
     #endif
 
         if (show_fd_window)
-            drawGui(&filename, &my_image_width, &my_image_height, &my_texture, renderer, display_width, display_height);
+            drawGui(&filename, &img_width, &img_height, &texture, renderer, display_width, display_height);
 
         if (show_config_window)
         { // Configuratuion window
@@ -363,11 +363,9 @@ int main(int, char**)
         renderWithTransparency(renderer, io, transparent_colorref);
     }
 
-    if (my_texture) {
-        SDL_DestroyTexture(my_texture);
+    if (texture) {
+        SDL_DestroyTexture(texture);
     }
-
-    lua_close(L);
 
     // Cleanup
     ImGui_ImplSDLRenderer2_Shutdown();
