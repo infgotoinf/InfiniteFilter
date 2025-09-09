@@ -37,7 +37,8 @@ int main(int, char**)
 //          SETUP
 //---------------------------------------------------------------------------------
 
-    lua_init();
+    // Lua intialisation
+    // lua_init();
 
     // Setup SDL
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)

@@ -20,25 +20,35 @@
 ##---------------------------------------------------------------------------------
 #                           Requirements to build
 #
-# To build this programm on windows you will need: g++, libstdc++, lwinpthread
-# Install them via UCRT64 (C:\msys64\ucrt64.exe):
+# To build this programm on windows you will need: make, g++, libstdc++, lwinpthread
+# You need to download MSYS2 (https://www.msys2.org/)
+# And install them via UCRT64 (C:\msys64\ucrt64.exe):
 # pacman -Syu
+# pacman -S make
 # pacman -S mingw-w64-ucrt-x86_64-toolchain
 #
 # You will also need freetype, libpng, harfbuzz, brotli, bzip2, graphite2, SDL2
 # pacman -S mingw-w64-ucrt-x86_64-LIBNAME
 # 
-##---------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 ##           If you prefer to use console or don't want to use VS Code
 ##
 ## in UCRT64 cd to the project folder and run:
 ## make build=debug
 ##        OR
 ## make build=release
-## (after building a release I compress it via UPX https://github.com/upx/upx)
 ## 
 ## Use 'make clean' to clean build folder
 ##
+##---------------------------------------------------------------------------------
+#                              For developers
+#
+# If you want to work on this project in VS Code I recomend you to install C/C++
+# extension from Microsoft and Makefile Tools also from Microsoft.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# After building a release I compress it via UPX https://github.com/upx/upx
+#
 ##---------------------------------------------------------------------------------
 
 CXX  = g++
@@ -155,7 +165,8 @@ $(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
-all: mkdir mkdir_bin mkdir_src mkdir_filters $(BUILD_DIR)/$(EXE)
+# all: mkdir mkdir_bin mkdir_src mkdir_filters $(BUILD_DIR)/$(EXE)
+all: mkdir $(BUILD_DIR)/$(EXE)
 	@echo $(build) build complete
 
 $(BUILD_DIR)/$(EXE): $(OBJS)
@@ -165,19 +176,19 @@ $(BUILD_DIR)/$(EXE): $(OBJS)
 mkdir:
 	mkdir -p $(BUILD_DIR)
 
-mkdir_bin: mkdir
-	mkdir -p $(BUILD_DIR)/bin
-	cp $(LUAJIT_DIR)/lfs.dll $(BUILD_DIR)/bin/
-	cp $(LUAJIT_DIR)/lua51.dll $(BUILD_DIR)/bin/
-	cp $(LUAJIT_DIR)/liblua51.dll.a $(BUILD_DIR)/bin/
+# mkdir_bin: mkdir
+# 	mkdir -p $(BUILD_DIR)/bin
+# 	cp $(LUAJIT_DIR)/lfs.dll $(BUILD_DIR)/bin/
+# 	cp $(LUAJIT_DIR)/lua51.dll $(BUILD_DIR)/bin/
+# 	cp $(LUAJIT_DIR)/liblua51.dll.a $(BUILD_DIR)/bin/
 
-mkdir_src: mkdir
-	mkdir -p $(BUILD_DIR)/src
-	cp infinitefilter/src/filter_runner.lua $(BUILD_DIR)/src/
+# mkdir_src: mkdir
+# 	mkdir -p $(BUILD_DIR)/src
+# 	cp infinitefilter/src/filter_runner.lua $(BUILD_DIR)/src/
 
-mkdir_filters: mkdir
-	mkdir -p $(BUILD_DIR)/filters
-	cp $(FILTER_FILES) $(BUILD_DIR)/filters/
+# mkdir_filters: mkdir
+# 	mkdir -p $(BUILD_DIR)/filters
+# 	cp $(FILTER_FILES) $(BUILD_DIR)/filters/
 
 clean:
 	rm -rf $(BUILD_DIR)

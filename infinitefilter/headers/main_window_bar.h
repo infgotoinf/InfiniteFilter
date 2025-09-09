@@ -4,7 +4,7 @@
 #include <string>
 
 #include "load_texture_impl.h"
-#include "filter_handler.h"
+//#include "filter_handler.h"
 
 
 
@@ -182,14 +182,14 @@ static void ShowFileMenu()
 
 static void ShowFilterMenu(SDL_Renderer* renderer, SDL_Texture** texture)
 {
-    for (const auto& entry : fs::directory_iterator("./filters")) {
-        if (entry.is_regular_file()) {
-            std::string filename = entry.path().filename().string();
-            if (ImGui::MenuItem(filename.c_str())) {
-                filter_image(file_data, img_width, img_height, channels, filename.c_str(), renderer, texture);
-            }
-        }
-    }
+    // for (const auto& entry : fs::directory_iterator("./filters")) {
+    //     if (entry.is_regular_file()) {
+    //         std::string filename = entry.path().filename().string();
+    //         if (ImGui::MenuItem(filename.c_str())) {
+    //             filter_image(file_data, img_width, img_height, channels, filename.c_str(), renderer, texture);
+    //         }
+    //     }
+    // }
 }
 
 //---------------------------------------------------------------------------------
