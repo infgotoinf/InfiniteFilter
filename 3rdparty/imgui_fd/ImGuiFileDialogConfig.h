@@ -72,15 +72,15 @@
 //// SHORTCUTS => ctrl + KEY ////
 /////////////////////////////////
 
-#define SelectAllFilesKey ImGuiKey_A
+// #define SelectAllFilesKey ImGuiKey_A
 
 /////////////////////////////////
 //// DIALOG EXIT ////////////////
 /////////////////////////////////
 
 // by ex you can quit the dialog by pressing the key excape
-#define USE_DIALOG_EXIT_WITH_KEY
-#define IGFD_EXIT_KEY ImGuiKey_Escape
+// #define USE_DIALOG_EXIT_WITH_KEY
+// #define IGFD_EXIT_KEY ImGuiKey_Escape
 
 /////////////////////////////////
 //// WIDGETS ////////////////////
@@ -171,7 +171,7 @@
 //// PLACES FEATURES ////////////
 /////////////////////////////////
 
-#define USE_PLACES_FEATURE
+// #define USE_PLACES_FEATURE
 // #define PLACES_PANE_DEFAULT_SHOWN false
 // #define placesPaneWith 150.0f
 // #define IMGUI_TOGGLE_BUTTON ToggleButton
@@ -187,7 +187,7 @@
 //////////////////////////////////////
 
 // a group for bookmarks will be added by default, but you can also create it yourself and many more
-#define USE_PLACES_BOOKMARKS
+// #define USE_PLACES_BOOKMARKS
 // #define PLACES_BOOKMARK_DEFAULT_OPEPEND true
 // #define placesBookmarksGroupName "Bookmarks"
 // #define placesBookmarksDisplayOrder 0  // to the first
@@ -198,7 +198,7 @@
 
 // a group for system devices (returned by IFileSystem), but you can also add yours
 // by ex if you would like to display a specific icon for some devices
-#define USE_PLACES_DEVICES
+// #define USE_PLACES_DEVICES
 // #define PLACES_DEVICES_DEFAULT_OPEPEND true
 // #define placesDevicesGroupName "Devices"
 // #define placesDevicesDisplayOrder 10  // to the end

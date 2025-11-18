@@ -58,7 +58,6 @@ DEBUG   = DEBUG_Infinite_Filter
 
 SRC_DIR       = ./infinitefilter/src
 BUILD_DIR     = ./build
-LUAJIT_DIR    = ./3rdparty/luajit
 IMGUI_DIR     = ./3rdparty/imgui
 IMGUI_FD_DIR  = ./3rdparty/imgui_fd
 BACKENDS_DIR  = $(IMGUI_DIR)/backends
@@ -85,16 +84,16 @@ CXXFLAGS = -std=c++17 \
            -I$(FREETYPE_DIR2) \
            -I$(STB_DIR) \
            -I$(SDL2_DIR) \
-           -I$(FREETYPE_DIR) \
-           -I$(LUAJIT_DIR)
+           -I$(FREETYPE_DIR)
 
-RELEASE_CXXFLAGS = -g0 -O3 -w -DNDEBUG -flto -fno-rtti -fno-exceptions \
-                   -ffunction-sections -fdata-sections -Wl,--gc-sections \
-                   -fvisibility=hidden -fomit-frame-pointer -funroll-loops \
-                   -fstrict-aliasing -fipa-pta -ftree-vectorize \
-                   -fno-semantic-interposition -Wl,-O3 -Wl,--relax \
-                   -Wl,--strip-all -mfpmath=both -mbranch-cost=2 \
-                   -fno-stack-protector -fno-unwind-tables
+RELEASE_CXXFLAGS = -g0 -O3 -Wall -Wextra -pedantic
+                   # -w -DNDEBUG -flto -fno-rtti -fno-exceptions \
+                   # -ffunction-sections -fdata-sections -Wl,--gc-sections \
+                   # -fvisibility=hidden -fomit-frame-pointer -funroll-loops \
+                   # -fstrict-aliasing -fipa-pta -ftree-vectorize \
+                   # -fno-semantic-interposition -Wl,-O3 -Wl,--relax \
+                   # -Wl,--strip-all -mfpmath=both -mbranch-cost=2 \
+                   # -fno-stack-protector -fno-unwind-tables
                    # There are hell-a-lot-of stuff
 
 DEBUG_CXXFLAGS = -g -g3 -O0 -Wall -Wextra -pedantic

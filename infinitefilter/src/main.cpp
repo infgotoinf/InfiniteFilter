@@ -11,19 +11,9 @@
 #define DEVELOPER_OPTIONS // Disable this for a release
 #include "../headers/main_window_bar.h"
 
-
-
-void renderWithTransparency(SDL_Renderer* renderer, ImGuiIO& io, int transparent_colorref)
-{
-    ImGui::Render();
-    SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer, GetRValue(transparent_colorref), GetGValue(transparent_colorref), GetBValue(transparent_colorref), SDL_ALPHA_OPAQUE);
-	SDL_RenderFillRect(renderer, NULL);
-    SDL_RenderClear(renderer);
-    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
-    SDL_RenderPresent(renderer);
-}
+#if !SDL_VERSION_ATLEAST(2,0,17)
+#error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
+#endif
 
 
 //=================================================================================
@@ -37,14 +27,14 @@ int main(int, char**)
 //          SETUP
 //---------------------------------------------------------------------------------
 
-    // Lua intialisation
-    // lua_init();
-
     // Setup SDL
-    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+#ifdef _WIN32
+    ::SetProcessDPIAware();
+#endif
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
         printf("Error: %s\n", SDL_GetError());
-        return -1;
+        return 1;
     }
 
     // From 2.0.18: Enable native IME.
@@ -53,46 +43,37 @@ int main(int, char**)
 #endif
 
     // Create window with SDL_Renderer graphics context
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_BORDERLESS);
-    SDL_Window* window = SDL_CreateWindow("Infinite Filter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1, 1, window_flags);
+    float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-        return -1;
+        return 1;
     }
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
     if (renderer == nullptr)
     {
         SDL_Log("Error creating SDL_Renderer!");
-        return -1;
+        return 1;
     }
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImFontConfig config;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup scaling
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
     
-
-    // Windows transparency setup
-    static const COLORREF transparent_colorref = RGB(255, 0, 255);
-#ifdef _WIN32
-    SDL_SysWMinfo wmInfo;
-    SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(window, &wmInfo);
-	HWND handle = wmInfo.info.win.window;
-	if(!SetWindowLong(handle, GWL_EXSTYLE, GetWindowLong(handle, GWL_EXSTYLE) | WS_EX_LAYERED))
-		fprintf(stderr, "SetWindowLong Error\n");
-    if(!SetLayeredWindowAttributes(handle, transparent_colorref, 0, 1))
-		fprintf(stderr, "SetLayeredWindowAttributes Error\n");
-#endif
-
 
     // Load Fonts
     ImVector<ImWchar> ranges;
@@ -143,7 +124,6 @@ int main(int, char**)
     colors[ImGuiCol_Tab]                  = ImVec4(0.50f, 0.50f, 0.50f, 0.40f);
     colors[ImGuiCol_TabSelected]          = ImVec4(0.78f, 0.78f, 0.78f, 0.80f);
 
-    ImGuiStyle& style = ImGui::GetStyle();
     style.GrabRounding   = 3.0f;
     style.FrameRounding  = 3.0f;
 
@@ -155,8 +135,8 @@ int main(int, char**)
     SDL_GetCurrentDisplayMode(0, &dm);
     int display_width = dm.w;
     int display_height = dm.h; 
-    SDL_SetWindowSize(window, display_width, display_height);
-    SDL_SetWindowPosition(window, 0, 0);
+    SDL_SetWindowSize(window, display_width/2, display_height/2);
+    SDL_SetWindowPosition(window, display_width/2, display_height/2);
 
 
     // Our state
@@ -361,7 +341,13 @@ int main(int, char**)
 //          RENDERING
 //---------------------------------------------------------------------------------
 
-        renderWithTransparency(renderer, io, transparent_colorref);
+        // renderWithTransparency(renderer, io, transparent_colorref);
+        ImGui::Render();
+        SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+        SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+        SDL_RenderClear(renderer);
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+        SDL_RenderPresent(renderer);
     }
 
     if (texture) {
@@ -375,6 +361,7 @@ int main(int, char**)
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    SDL_Quit();
 
     return 0;
 }
