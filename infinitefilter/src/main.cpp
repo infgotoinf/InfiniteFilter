@@ -123,6 +123,9 @@ int main(int, char**)
     colors[ImGuiCol_TabHovered]           = ImVec4(0.50f, 0.50f, 0.50f, 0.60f);
     colors[ImGuiCol_Tab]                  = ImVec4(0.50f, 0.50f, 0.50f, 0.40f);
     colors[ImGuiCol_TabSelected]          = ImVec4(0.78f, 0.78f, 0.78f, 0.80f);
+    colors[ImGuiCol_WindowBg]             = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+
+
 
     style.GrabRounding   = 3.0f;
     style.FrameRounding  = 3.0f;
@@ -178,26 +181,6 @@ int main(int, char**)
         ImGui::NewFrame();
 
 //---------------------------------------------------------------------------------
-//          WINDOW RAINBOW TRANSITION
-//---------------------------------------------------------------------------------
-        
-        static float color_brightness     = 0.15f;
-        static float old_color_brightness = color_brightness;
-        static float color_change_speed   = 0.001f;
-        static float r = color_brightness;
-        static float g = 0.0f;
-        static float b = 0.0f;
-
-        if      (r >= color_brightness   &&                            b >  color_change_speed) b -= color_change_speed;
-        else if (r >= color_brightness   && g <  color_brightness   && b <= color_change_speed) g += color_change_speed;
-        else if (r >  color_change_speed && g >= color_brightness                             ) r -= color_change_speed;
-        else if (r <= color_change_speed && g >= color_brightness   && b <  color_brightness  ) b += color_change_speed;
-        else if (                           g >  color_change_speed && b >= color_brightness  ) g -= color_change_speed;
-        else if (r <  color_brightness   && g <= color_change_speed && b >= color_brightness  ) r += color_change_speed;
-
-        colors[ImGuiCol_WindowBg] = ImVec4(r, g, b, 1.0f);
-
-//---------------------------------------------------------------------------------
 //          MAIN WINDOW
 //---------------------------------------------------------------------------------
 
@@ -205,7 +188,18 @@ int main(int, char**)
 
         ImGuiWindowFlags main_window_flags = 0;
         main_window_flags |= ImGuiWindowFlags_NoScrollbar;  // Disable scrollbar
-        main_window_flags |= ImGuiWindowFlags_MenuBar;      // Enable menu bar
+        main_window_flags |= ImGuiWindowFlags_NoDecoration;
+        main_window_flags |= ImGuiWindowFlags_NoMove;
+        main_window_flags |= ImGuiWindowFlags_NoSavedSettings;
+
+
+        static bool use_work_area = true;
+
+        // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
+        // Based on your use case you may want one or the other.
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
+        ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
 
         ImGui::Begin("Image Render", nullptr, main_window_flags);
 
@@ -213,74 +207,52 @@ int main(int, char**)
 //          MENU BAR
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-        if (ImGui::BeginMenuBar())
+        if (ImGui::BeginMainMenuBar())
         {
             // File menu
-            if (ImGui::BeginMenu(
-                [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Файл";
-                        case ENG:
-                        default: return "File";
-                    }
-                }()))
+            if (ImGui::BeginMenu("File"))
             {
                 ShowFileMenu();
                 ImGui::EndMenu();
             }
-            // // Edit menu
-            // if (ImGui::BeginMenu(
-            //     [&]() -> const char* {
-            //         switch (language){
-            //             case RUS: return u8"Правка";
-            //             case ENG:
-            //             default: return "Edit";
-            //         }
-            //     }()))
-            // {
-            //     ShowEditMenu();
-            //     ImGui::EndMenu();
-            // }
+            // Edit menu
+            if (ImGui::BeginMenu("Edit"))
+            {
+                ShowEditMenu();
+                ImGui::EndMenu();
+            }
             // Filter menu
-            if (ImGui::BeginMenu(
-                [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Фильтр";
-                        case ENG:
-                        default: return "Filter";
-                    }
-                }()))
+            if (ImGui::BeginMenu("Filter"))
             {
                 ShowFilterMenu(renderer, &texture);
                 ImGui::EndMenu();
             }
             // Settings menu
-            if (ImGui::BeginMenu(
-                [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Настройки";
-                        case ENG:
-                        default: return "Settings";
-                    }
-                }()))
+            if (ImGui::BeginMenu("Settings"))
             {
                 ShowSettingsMenu();
                 ImGui::EndMenu();
             }
             // Help menu
-            if (ImGui::BeginMenu(
-                [&]() -> const char* {
-                    switch (language){
-                        case RUS: return u8"Помощь";
-                        case ENG:
-                        default: return "Help";
-                    }
-                }()))
+            if (ImGui::BeginMenu("Help"))
             {
                 ShowHelpMenu();
                 ImGui::EndMenu();
             }
-            ImGui::EndMenuBar();
+            ImGui::EndMainMenuBar();
+        }
+
+        if (ImGui::BeginTabBar("##TabBar"))
+        {
+            if (ImGui::BeginTabItem("Things"))
+            {
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Thingis"))
+            {
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
         }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -317,18 +289,6 @@ int main(int, char**)
         if (show_config_window)
         { // Configuratuion window
             ImGui::Begin("Configuration", &show_config_window, ImGuiWindowFlags_AlwaysAutoResize);
-            ImGui::SeparatorText("Theme settings");
-            if (ImGui::SliderFloat("Colour brightness", &color_brightness, 0.0f, 0.5f, "%.2f"))
-            {
-                if (r >= old_color_brightness) r = color_brightness;
-                if (g >= old_color_brightness) g = color_brightness;
-                if (b >= old_color_brightness) b = color_brightness;
-                old_color_brightness = color_brightness;
-            };
-            if (ImGui::SliderFloat("Color change speed", &color_change_speed, 0.0f, (color_brightness / 10 > 0.1f ? 0.1f : color_brightness / 10)))
-            { };
-            if (color_change_speed > color_brightness / 10) color_change_speed = color_brightness / 10;
-            ImGui::End();
         }
         if (show_credits_window)
         { // Credits window

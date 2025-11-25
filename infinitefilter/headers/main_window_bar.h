@@ -8,9 +8,7 @@
 
 
 
-enum Languages {ENG, RUS};
 
-int language = ENG;
 bool show_fd_window = false;
 #ifdef DEVELOPER_OPTIONS
 bool show_demo_window = true;
@@ -96,85 +94,36 @@ void drawGui(std::string* filename, int* img_width, int* img_height, SDL_Texture
 static void ShowFileMenu()
 {
     // Export
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Экспортировать";
-                case ENG:
-                default:  return "Export";
-            }
-        }(), "Ctrl+S"))
+    if (ImGui::MenuItem("Export", "Ctrl+S"))
         {
             show_fd_window = true;
         }
     // Load
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Загрузить";
-                case ENG:
-                default:  return "Load";
-            }
-        }(), "Ctrl+D"))
+    if (ImGui::MenuItem("Load", "Ctrl+D"))
         {
             show_fd_window = true;
         }
 
     ImGui::Separator();
     // Quit
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-            switch (language){
-                case RUS: return u8"Выйти";
-                case ENG:
-                default:  return "Quit";
-            }
-        }(), "Alt+F4")) {}
+    if (ImGui::MenuItem("Quit", "Alt+F4")) {}
 }
 
 //---------------------------------------------------------------------------------
 //          EDIT MENU
 //---------------------------------------------------------------------------------
 
-// static void ShowEditMenu()
-// {
-    // // Undo
-    // if (ImGui::MenuItem(
-    //     [&]() -> const char* {
-    //     switch (language){
-    //         case RUS: return u8"Отменить";
-    //         case ENG:
-    //         default:  return "Undo";
-    //     }
-    // }(), "Ctrl+Z")) {}
-    // // Redo
-    // if (ImGui::MenuItem(
-    //     [&]() -> const char* {
-    //     switch (language){
-    //         case RUS: return u8"Повторить";
-    //         case ENG:
-    //         default:  return "Redo";
-    //     }
-    // }(), "Ctrl+Shift+Z", false, false)) {} // Disabled item
-    // // Copy
-    // if (ImGui::MenuItem(
-    //     [&]() -> const char* {
-    //     switch (language){
-    //         case RUS: return u8"Копировать";
-    //         case ENG:
-    //         default:  return "Copy";
-    //     }
-    // }(), "Ctrl+C")) {}
-    // // Paste
-    // if (ImGui::MenuItem(
-    //     [&]() -> const char* {
-    //     switch (language){
-    //         case RUS: return u8"Вставить";
-    //         case ENG:
-    //         default:  return "Paste";
-    //     }
-    // }(), "Ctrl+V")) {}
-// }
+static void ShowEditMenu()
+{
+ // Undo
+ if (ImGui::MenuItem("Undo", "Ctrl+Z")) {}
+ // Redo
+ if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z", false, false)) {} // Disabled item
+ // Copy
+ if (ImGui::MenuItem("Copy", "Ctrl+C")) {}
+ // Paste
+ if (ImGui::MenuItem("Paste", "Ctrl+V")) {}
+}
 
 //---------------------------------------------------------------------------------
 //          FILTER MENU
@@ -199,34 +148,9 @@ static void ShowFilterMenu(SDL_Renderer* renderer, SDL_Texture** texture)
 static void ShowSettingsMenu()
 {
     // Configuration
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Настройка";
-            case ENG:
-            default: return "Configuration";
-        }
-    }()))
+    if (ImGui::MenuItem("Configuration"))
     {
         show_config_window = true;
-    }
-    // Language
-    if (ImGui::BeginMenu(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Язык";
-            case ENG:
-            default: return "Language";
-        }
-    }()))
-    {
-        if (ImGui::MenuItem("English")) {
-            language = 0;
-        }
-        if (ImGui::MenuItem(u8"Русский")){
-            language = 1;
-        }
-        ImGui::EndMenu();
     }
 }
 
@@ -237,62 +161,27 @@ static void ShowSettingsMenu()
 static void ShowHelpMenu()
 {
     // User Manual
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Руководство Пользователя";
-            case ENG:
-            default: return "User Manual";
-        }
-    }()))
+    if (ImGui::MenuItem("User Manual"))
     {
         std::string url = "https://github.com/infgotoinf/InfiniteFilter/wiki";
         system((std::string("start \"\" \"") + url + std::string("\"")).c_str());
     }
     // Report a bug
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Сообщить об ошибке";
-            case ENG:
-            default: return "Report a bug";
-        }
-    }()))
+    if (ImGui::MenuItem("Report a bug"))
     {
         std::string url = "https://github.com/infgotoinf/InfiniteFilter/issues/new";
         system((std::string("start \"\" \"") + url + std::string("\"")).c_str());
     }
     ImGui::Separator();
     // Credits
-    if (ImGui::MenuItem(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"О программе";
-            case ENG:
-            default: return "Credits";
-        }
-    }()))
+    if (ImGui::MenuItem("Credits"))
     {
         show_credits_window = true;
     }
 #ifdef DEVELOPER_OPTIONS
     // Demo Window
-    if (ImGui::Checkbox(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Тестировочное окно";
-            case ENG:
-            default: return "Demo Window";
-        }
-    }(), &show_demo_window)) {}
+    if (ImGui::Checkbox("Demo Window", &show_demo_window)) {}
     // Demo File Dialog
-    if (ImGui::Checkbox(
-        [&]() -> const char* {
-        switch (language){
-            case RUS: return u8"Тестировочное файловое окно";
-            case ENG:
-            default: return "Demo File Dialog";
-        }
-    }(), &show_fd_window)) {}
+    if (ImGui::Checkbox("Demo File Dialog", &show_fd_window)) {}
 #endif
 }

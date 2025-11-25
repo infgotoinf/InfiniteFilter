@@ -96,11 +96,11 @@ RELEASE_CXXFLAGS = -g0 -O3 -Wall -Wextra -pedantic
                    # -fno-stack-protector -fno-unwind-tables
                    # There are hell-a-lot-of stuff
 
-DEBUG_CXXFLAGS = -g -g3 -O0 -Wall -Wextra -pedantic
+DEBUG_CXXFLAGS = -g -g3 -Og -Wall -Wextra -pedantic
 
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreetype -lpng -lharfbuzz -lgraphite2 \
           -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
-          -Wl,--dynamicbase -Wl,--nxcompat -L$(LUAJIT_DIR) -l:liblua51.dll.a\
+          -Wl,--dynamicbase -Wl,--nxcompat \
           -static-libstdc++ -static-libgcc -static -lwinpthread -lsetupapi -lhid \
           -lwinmm -limm32 -lshell32 -lole32 -loleaut32 -luuid -lversion -msse2
 
@@ -165,7 +165,7 @@ $(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
 
 
 # all: mkdir mkdir_bin mkdir_src mkdir_filters $(BUILD_DIR)/$(EXE)
-all: mkdir $(BUILD_DIR)/$(EXE)
+all: mkdir $(BUILD_DIR)/$(EXE) run
 	@echo $(build) build complete
 
 $(BUILD_DIR)/$(EXE): $(OBJS)
@@ -174,6 +174,9 @@ $(BUILD_DIR)/$(EXE): $(OBJS)
 
 mkdir:
 	mkdir -p $(BUILD_DIR)
+
+run:
+	./$(BUILD_DIR)/$(EXE)
 
 # mkdir_bin: mkdir
 # 	mkdir -p $(BUILD_DIR)/bin
