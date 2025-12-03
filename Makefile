@@ -178,6 +178,9 @@ mkdir:
 run:
 	./$(BUILD_DIR)/$(EXE)
 
+# cp:
+# 	cp assets/MyImage01.jpg $(BUILD_DIR)
+
 # mkdir_bin: mkdir
 # 	mkdir -p $(BUILD_DIR)/bin
 # 	cp $(LUAJIT_DIR)/lfs.dll $(BUILD_DIR)/bin/
