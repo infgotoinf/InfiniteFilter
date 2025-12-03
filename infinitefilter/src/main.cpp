@@ -145,10 +145,18 @@ int main(int, char**)
 
 
     // Our state
-    std::string filename = u8"..\\assets\\MyImage01.jpg";
+    std::string filename = u8"assets/MyImage01.jpg";
     SDL_Texture* texture;
     int img_width, img_height, channels;
     bool ret = LoadTextureFromFile(filename.c_str(), renderer, &texture, &img_width, &img_height);
+    if (ret)
+    {
+        printf("Image loadead successfully!\n");
+    }
+    else
+    {
+        fprintf(stderr, "Error loading image!\n");
+    }
 
 //=================================================================================
 //      START OF THE MAIN LOOP
@@ -189,11 +197,11 @@ int main(int, char**)
         // static int f = 0;
 
         ImGuiWindowFlags main_window_flags = 0;
-        main_window_flags |= ImGuiWindowFlags_NoScrollbar;  // Disable scrollbar
-        main_window_flags |= ImGuiWindowFlags_NoDecoration;
-        main_window_flags |= ImGuiWindowFlags_NoMove;
-        main_window_flags |= ImGuiWindowFlags_NoSavedSettings;
-        main_window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+        main_window_flags = ImGuiWindowFlags_NoScrollbar  // Disable scrollbar
+                          | ImGuiWindowFlags_NoDecoration
+                          | ImGuiWindowFlags_NoMove
+                          | ImGuiWindowFlags_NoSavedSettings
+                          | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 
         static bool use_work_area = true;
@@ -245,100 +253,134 @@ int main(int, char**)
             ImGui::EndMainMenuBar();
         }
 
-        // Left
-        static int selected = 0;
-        {
-            ImGui::BeginChild("left pane", ImVec2(150, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
-            static const char* item_names[] = { "Item One", "Item Two", "Item Three", "Item Four", "Item Five" };
-            for (int n = 0; n < IM_ARRAYSIZE(item_names); n++)
-            {
-                const char* item = item_names[n];
-                //if (ImGui::Selectable(item))
-                if (ImGui::TreeNode(item))
-                {
-                    selected = n;
-                    ImGui::Text("lol");
-                    ImGui::TreePop();
-                }
-
-                if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
-                {
-                    int n_next = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
-                    if (n_next >= 0 && n_next < IM_ARRAYSIZE(item_names))
-                    {
-                        item_names[n] = item_names[n_next];
-                        item_names[n_next] = item;
-                        ImGui::ResetMouseDragDelta();
-                    }
-                }
-            }
-            int num_of_elements = 100;
-            for (int i = 0; i < num_of_elements; i++)
-            {
-                char label[128];
-                sprintf(label, "MyObject %d", i);
-                if (ImGui::Selectable(label, selected == i, ImGuiSelectableFlags_SelectOnNav))
-                    selected = i;
-
-                if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
-                {
-                    int n_next = i + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
-                    if (n_next >= 0 && n_next < num_of_elements)
-                    {
-                        // item_names[i] = item_names[n_next];
-                        // item_names[n_next] = item;
-                        ImGui::ResetMouseDragDelta();
-                    }
-                }
-            }
-            ImGui::EndChild();
-        }
-        ImGui::SameLine();
-
-        // Right
-        {
-            ImGui::BeginGroup();
-            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
-            ImGui::Text("MyObject: %d", selected);
-            ImGui::Separator();
-            if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
-            {
-                if (ImGui::BeginTabItem("Description"))
-                {
-                    ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
-                    ImGui::EndTabItem();
-                }
-                if (ImGui::BeginTabItem("Details"))
-                {
-                    ImGui::Text("ID: 0123456789");
-                    ImGui::EndTabItem();
-                }
-                ImGui::EndTabBar();
-            }
-            ImGui::EndChild();
-            if (ImGui::Button("Revert")) {}
-            ImGui::SameLine();
-            if (ImGui::Button("Save")) {}
-            ImGui::EndGroup();
-        }
-
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //          MAIN WINDOW CONTENT
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Left
+        ImGui::BeginGroup();
+        ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+        if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
+        {
+            if (ImGui::BeginTabItem("Description"))
+            {
+                //Left
+                static int selected = 0;
+                {
+                    ImGui::BeginChild("left pane", ImVec2(150, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
+                    static const char* item_names[] = { "Item One", "Item Two", "Item Three", "Item Four", "Item Five" };
+                    for (int n = 0; n < IM_ARRAYSIZE(item_names); n++)
+                    {
+                        const char* item = item_names[n];
+                        //if (ImGui::Selectable(item))
+                        if (ImGui::TreeNode(item))
+                        {
+                            selected = n;
+                            ImGui::Text("lol");
+                            ImGui::TreePop();
+                        }
+                    
+                        if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
+                        {
+                            int n_next = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+                            if (n_next >= 0 && n_next < IM_ARRAYSIZE(item_names))
+                            {
+                                item_names[n] = item_names[n_next];
+                                item_names[n_next] = item;
+                                ImGui::ResetMouseDragDelta();
+                            }
+                        }
+                    }
+                    // int num_of_elements = 100;
+                    // for (int i = 0; i < num_of_elements; i++)
+                    // {
+                    //     char label[128];
+                    //     sprintf(label, "MyObject %d", i);
+                    //     if (ImGui::Selectable(label, selected == i, ImGuiSelectableFlags_SelectOnNav))
+                    //         selected = i;
+                    
+                    //     if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
+                    //     {
+                    //         int n_next = i + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+                    //         if (n_next >= 0 && n_next < num_of_elements)
+                    //         {
+                    //             // item_names[i] = item_names[n_next];
+                    //             // item_names[n_next] = item;
+                    //             ImGui::ResetMouseDragDelta();
+                    //         }
+                    //     }
+                    // }
+                    ImGui::EndChild();
+                }
+                ImGui::SameLine();
+            
+                // Right
+                {
 
-        // ImGui::Text("pointer = %p", texture);
-        // ImGui::Text("size = %d x %d", img_width, img_height);
-        // ImGui::Text(filename.c_str());
+                    ImGuiIO& io = ImGui::GetIO();
+                    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
+                                                  | ImGuiWindowFlags_AlwaysAutoResize
+                                                  | ImGuiWindowFlags_NoSavedSettings
+                                                  | ImGuiWindowFlags_NoFocusOnAppearing
+                                                  | ImGuiWindowFlags_NoNav
+                                                  | ImGuiWindowFlags_NoMove;
+                    const float PAD = 10.0f;
+                    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+                    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+                    ImVec2 work_size = viewport->WorkSize;
+                    ImVec2 window_pos, window_pos_pivot;
+                    window_pos.x = work_pos.x + work_size.x - PAD;
+                    window_pos.y = work_pos.y + work_size.y - PAD;
+                    window_pos_pivot.x = 1.0f;
+                    window_pos_pivot.y = 1.0f;
+                    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
 
-        // ImGui::SliderInt("Image size", &f, -10, 10);
-        // ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2((float)img_width, (float)img_height));
-        
+                    ImGui::SetNextWindowBgAlpha(0.5f); // Transparent background
+                    if (ImGui::Begin("Image Info", NULL, window_flags))
+                    {
+                        ImGui::Text("%d x %d", img_width, img_height);
+                        ImGui::Text(filename.c_str());
+                        ImGui::End();
+                    }
 
-        ImVec2 image_window_size = ImVec2(img_width * (ImGui::GetWindowSize().y / img_height) - 60, ImGui::GetWindowSize().y - 60);
+                    // ImGui::SliderInt("Image size", &f, -10, 10);
+                    // ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2((float)img_width, (float)img_height));
 
-        ImGui::Image((ImTextureID)(intptr_t)texture, image_window_size);
-        ImGui::End();
+
+                    ImGui::GetCursorScreenPos();
+                    ImVec2 image_size = ImVec2((work_size.y), (work_size.y));
+
+                    ImGui::BeginChild("right pane", ImVec2(0, 0), ImGuiChildFlags_Borders);
+                    if (ImGui::BeginTable("images", 2))
+                    {
+                        for (int row = 0; row < 1; row++)
+                        {
+                            ImGui::TableNextRow();
+                            for (int column = 0; column < 2; column++)
+                            {
+                                ImGui::TableSetColumnIndex(column);
+                                ImGui::Image((ImTextureID)(intptr_t)texture, image_size);
+                            }
+                        }
+                        ImGui::EndTable();
+                    }
+                    ImGui::EndChild();
+                }
+                ImGui::EndTabItem();
+            if (ImGui::BeginTabItem("Details"))
+            {
+                ImGui::Text("ID: 0123456789");
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+        ImGui::EndChild();
+        if (ImGui::Button("Revert")) {}
+        ImGui::SameLine();
+        if (ImGui::Button("Save")) {}
+        ImGui::EndGroup();
+    }
+
+    ImGui::End();
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //          CHILD WINDOWS
