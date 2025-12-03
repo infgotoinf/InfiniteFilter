@@ -15,7 +15,7 @@ void lua_init()
 {
     L = luaL_newstate();
     luaL_openlibs(L);
-    
+        
     luaL_dofile(L, "scr/filter_runner.lua");
 }
 

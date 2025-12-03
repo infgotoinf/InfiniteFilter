@@ -9,23 +9,23 @@
 #include "../../assets/fonts/ProggyVector.h"
 
 #define DEVELOPER_OPTIONS // Disable this for a release
-#include "../headers/main_window_bar.h"
+#include "../headers/main_window_bar.hpp"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
 #endif
 
 
-//=================================================================================
+//=================================================================================================
 //      START OF THE MAIN CODE
-//=================================================================================
+//=================================================================================================
 
 int main(int, char**)
 {
 
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 //          SETUP
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 
     // Setup SDL
 #ifdef _WIN32
@@ -44,14 +44,19 @@ int main(int, char**)
 
     // Create window with SDL_Renderer graphics context
     float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE
+                                                   | SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example"
+                                        , SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED
+                                        , (int)(1280 * main_scale), (int)(800 * main_scale)
+                                        , window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
         return 1;
     }
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC
+                                                          | SDL_RENDERER_ACCELERATED);
     if (renderer == nullptr)
     {
         SDL_Log("Error creating SDL_Renderer!");
@@ -81,12 +86,15 @@ int main(int, char**)
     builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
     builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
     builder.BuildRanges(&ranges);
-    // io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 16.0f, nullptr, ranges.Data);
-    io.Fonts->AddFontFromMemoryCompressedTTF(ProggyVector_compressed_data, ProggyVector_compressed_size, 16.0f, nullptr, ranges.Data);
+    // io.Fonts->AddFontFromFileTTF("..\\imgui\\misc\\fonts\\ProggyVector.ttf", 16.0f
+    //                            , nullptr, ranges.Data);
+    io.Fonts->AddFontFromMemoryCompressedTTF(ProggyVector_compressed_data
+                                           , ProggyVector_compressed_size, 16.0f
+                                           , nullptr, ranges.Data);
 
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 //          STYLE EDITING
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 
     ImVec4* colors = ImGui::GetStyle().Colors;
     
@@ -132,8 +140,8 @@ int main(int, char**)
     style.GrabRounding   = 3.0f;
     style.FrameRounding  = 3.0f;
 
-//---------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 
     // Making app to take entire screen
     SDL_DisplayMode dm;
@@ -148,7 +156,7 @@ int main(int, char**)
     std::string filename = u8"assets/MyImage01.jpg";
     SDL_Texture* texture;
     int img_width, img_height, channels;
-    bool ret = LoadTextureFromFile(filename.c_str(), renderer, &texture, &img_width, &img_height);
+    bool ret = loadTextureFromFile(filename.c_str(), renderer, &texture, &img_width, &img_height);
     if (ret)
     {
         printf("Image loadead successfully!\n");
@@ -158,9 +166,9 @@ int main(int, char**)
         fprintf(stderr, "Error loading image!\n");
     }
 
-//=================================================================================
+//=================================================================================================
 //      START OF THE MAIN LOOP
-//=================================================================================
+//=================================================================================================
 
     bool done = false;
     while (!done)
@@ -176,7 +184,9 @@ int main(int, char**)
             ImGui_ImplSDL2_ProcessEvent(&event);
             if (event.type == SDL_QUIT)
                 done = true;
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+            if (event.type == SDL_WINDOWEVENT
+                && event.window.event == SDL_WINDOWEVENT_CLOSE
+                && event.window.windowID == SDL_GetWindowID(window))
                 done = true;
         }
         if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)
@@ -190,9 +200,9 @@ int main(int, char**)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 //          MAIN WINDOW
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 
         // static int f = 0;
 
@@ -206,7 +216,8 @@ int main(int, char**)
 
         static bool use_work_area = true;
 
-        // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
+        // We demonstrate using the full viewport area or the work area
+        // (without menu-bars, task-bars etc.)
         // Based on your use case you may want one or the other.
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
@@ -214,40 +225,40 @@ int main(int, char**)
 
         ImGui::Begin("Image Render", nullptr, main_window_flags);
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //          MENU BAR
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
         if (ImGui::BeginMainMenuBar())
         {
             // File menu
             if (ImGui::BeginMenu("File"))
             {
-                ShowFileMenu();
+                showFileMenu();
                 ImGui::EndMenu();
             }
             // Edit menu
             if (ImGui::BeginMenu("Edit"))
             {
-                ShowEditMenu();
+                showEditMenu();
                 ImGui::EndMenu();
             }
             // Filter menu
             if (ImGui::BeginMenu("Filter"))
             {
-                ShowFilterMenu(renderer, &texture);
+                showFilterMenu(renderer, &texture);
                 ImGui::EndMenu();
             }
             // Settings menu
             if (ImGui::BeginMenu("Settings"))
             {
-                ShowSettingsMenu();
+                showSettingsMenu();
                 ImGui::EndMenu();
             }
             // Help menu
             if (ImGui::BeginMenu("Help"))
             {
-                ShowHelpMenu();
+                showHelpMenu();
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
@@ -310,11 +321,6 @@ int main(int, char**)
                     //     }
                     // }
                     ImGui::EndChild();
-                }
-                ImGui::SameLine();
-            
-                // Right
-                {
 
                     ImGuiIO& io = ImGui::GetIO();
                     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
@@ -344,6 +350,8 @@ int main(int, char**)
 
                     // ImGui::SliderInt("Image size", &f, -10, 10);
                     // ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2((float)img_width, (float)img_height));
+        ImVec2 image_window_size = ImVec2(img_width * (ImGui::GetWindowSize().y / img_height) - 60
+                                        , ImGui::GetWindowSize().y - 60);
 
 
                     ImGui::GetCursorScreenPos();
@@ -382,9 +390,9 @@ int main(int, char**)
 
     ImGui::End();
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //          CHILD WINDOWS
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
         ImGui::SetNextWindowSize(ImVec2(500, 400));
 
@@ -394,7 +402,8 @@ int main(int, char**)
     #endif
 
         if (show_fd_window)
-            drawGui(&filename, &img_width, &img_height, &texture, renderer, display_width, display_height);
+            drawGui(&filename, &img_width, &img_height, &texture, renderer
+                  , display_width, display_height);
 
         if (show_config_window)
         { // Configuratuion window
@@ -407,14 +416,15 @@ int main(int, char**)
             ImGui::End();
         }
 
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 //          RENDERING
-//---------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 
         // renderWithTransparency(renderer, io, transparent_colorref);
         ImGui::Render();
         SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-        SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+        SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255)
+                                       , (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
         SDL_RenderClear(renderer);
         ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
