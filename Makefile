@@ -8,16 +8,6 @@
 #                      ╚═════╝  ╚═════╝ ╚═╝╚══════╝╚═════╝
 #
 ##---------------------------------------------------------------------------------
-##                !THIS FROJECT IS CONFIGURED TO RUN IN VS CODE!
-##
-## Making a build takes time, so launch.json may throw an error at the first run
-##      or you will have to rerun build to see your updated application!
-## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##
-## Go to "Run and Debug" (Ctrl+Shift+D) and choose "Debug Build" or "Release Build"
-## To clean "build" folder press (Ctrl+Shift+P) -> "Tasks: Run Task" -> make-clean
-##
-##---------------------------------------------------------------------------------
 #                           Requirements to build
 #
 # To build this programm on windows you will need: make, g++, libstdc++, lwinpthread
@@ -31,7 +21,6 @@
 # pacman -S mingw-w64-ucrt-x86_64-LIBNAME
 # 
 #----------------------------------------------------------------------------------
-##           If you prefer to use console or don't want to use VS Code
 ##
 ## in UCRT64 cd to the project folder and run:
 ## make build=debug
@@ -43,51 +32,59 @@
 ##---------------------------------------------------------------------------------
 #                              For developers
 #
-# If you want to work on this project in VS Code I recomend you to install C/C++
-# extension from Microsoft and Makefile Tools also from Microsoft.
-#
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # After building a release I compress it via UPX https://github.com/upx/upx
 #
 ##---------------------------------------------------------------------------------
 
-CXX  = g++
-
 RELEASE = RELEASE_Infinite_Filter
 DEBUG   = DEBUG_Infinite_Filter
 
-SRC_DIR       = ./infinitefilter/src
-BUILD_DIR     = ./build
-IMGUI_DIR     = ./3rdparty/imgui
-IMGUI_FD_DIR  = ./3rdparty/imgui_fd
-BACKENDS_DIR  = $(IMGUI_DIR)/backends
-FREETYPE_DIR2 = $(IMGUI_DIR)/freetype
-STB_DIR       = ./3rdparty/stb
-SDL2_DIR      = C:/msys64/ucrt64/include/SDL2
-FREETYPE_DIR  = C:/msys64/ucrt64/include/freetype2
+PROJECT_DIR  = ./infinitefilter
+3RDPARTY_DIR = ./infinitefilter/3rdparty
+INCLUDE_DIR  = ./infinitefilter/include
+BUILD_DIR    = ./build
+FILTER_DIR   = ./filters
 
-FILTER_FILES := $(wildcard filters/*.cpp)
+IMGUI_DIR          = $(3RDPARTY_DIR)/imgui
+IMGUI_FREETYPE_DIR = $(3RDPARTY_DIR)/imgui/freetype
+IMGUI_FD_DIR       = $(3RDPARTY_DIR)/imgui_fd
+STB_DIR            = $(3RDPARTY_DIR)/stb
+
+WIN_SDL2_DIR     = C:/msys64/ucrt64/include/SDL2
+WIN_FREETYPE_DIR = C:/msys64/ucrt64/include/freetype2
 
 
-SOURCES := $(shell find $(SRC_DIR) -name '*.cpp') \
-           $(shell find $(IMGUI_DIR) -name '*.cpp')\
-           $(shell find $(IMGUI_FD_DIR) -name '*.cpp')
+SOURCES := $(shell find $(PROJECT_DIR) -maxdepth 1 -name '*.cpp') \
+           $(shell find $(3RDPARTY_DIR) -name '*.cpp')
 
 SOURCES := $(basename $(notdir $(SOURCES)))
 OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
 
 
-CXXFLAGS = -std=c++17 \
-           -I$(IMGUI_DIR) \
-           -I$(IMGUI_FD_DIR) \
-           -I$(BACKENDS_DIR) \
-           -I$(FREETYPE_DIR2) \
-           -I$(STB_DIR) \
-           -I$(SDL2_DIR) \
-           -I$(FREETYPE_DIR)
+FILTERS  := $(shell find $(FILTER_DIR) -name '*.cpp')
+FILTERS  := $(basename $(notdir $(FILTERS)))
 
-RELEASE_CXXFLAGS = -g0 -O3 -Wall -Wextra -pedantic
-                   # -w -DNDEBUG -flto -fno-rtti -fno-exceptions \
+
+DLL_FILTER_DIR = $(PROJECT_DIR)/dll_filters
+DLL_FILTERS   := $(shell ls $(DLL_FILTER_DIR))
+
+DLL_BUILD_FILTER_DIR = $(BUILD_DIR)/filters
+DLL_BUILD_FILTER_FILES = \
+    $(foreach filter,$(DLL_FILTERS), \
+    $(DLL_BUILD_FILTER_DIR)/$(filter).dll)
+
+
+CXXFLAGS = -std=c++17 \
+           -I$(INCLUDE_DIR) \
+           -I$(IMGUI_DIR) \
+           -I$(IMGUI_FREETYPE_DIR) \
+           -I$(IMGUI_FD_DIR) \
+           -I$(STB_DIR) \
+           -I$(WIN_SDL2_DIR) \
+           -I$(WIN_FREETYPE_DIR)
+
+RELEASE_CXXFLAGS = -g0 -O3 -Wall -Wextra -pedantic -flto
+                   # -w -DNDEBUG -fno-rtti -fno-exceptions \
                    # -ffunction-sections -fdata-sections -Wl,--gc-sections \
                    # -fvisibility=hidden -fomit-frame-pointer -funroll-loops \
                    # -fstrict-aliasing -fipa-pta -ftree-vectorize \
@@ -122,33 +119,38 @@ endif
 ##---------------------------------------------------------------------------------
 
 ifeq ($(OS),Windows_NT)
+    CXX      = x86_64-w64-mingw32-g++
     PLATFORM = windows
+    FILTER_FLAGS  = -static-libgcc -static-libstdc++
+    LIB_EXTENSION = .dll
+    LIB_OBJS := $(FILTERS:%=$(BUILD_DIR)/filters/%.dll)
 else
+    FILTER_FLAGS  = -shared -fPIC
+    LIB_EXTENSION = .so
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
+        CXX = g++
         PLATFORM = linux
     endif
     ifeq ($(UNAME_S),Darwin)
+        CXX = clang++
         PLATFORM = macos
     endif
 endif
 
 ifeq ($(PLATFORM),windows)
   LDFLAGS += -mwindows  # Hide console window
-  EXE_EXT = .exe
 else ifeq ($(PLATFORM),macos)
   LDFLAGS += -framework Cocoa -framework CoreVideo
-  EXE_EXT =
 else ifeq ($(PLATFORM),linux)
   LDFLAGS += -lm -ldl -lpthread -lrt
-  EXE_EXT =
 endif
 
 ##---------------------------------------------------------------------------------
 ##                                 BUILD RULES
 ##---------------------------------------------------------------------------------
 
-$(BUILD_DIR)/$(build)_%.o:$(SRC_DIR)/%.cpp
+$(BUILD_DIR)/$(build)_%.o:$(PROJECT_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/%.cpp
@@ -157,15 +159,15 @@ $(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/%.cpp
 $(BUILD_DIR)/$(build)_%.o:$(IMGUI_FD_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/$(build)_%.o:$(BACKENDS_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/$(build)_%.o:$(FREETYPE_DIR2)/%.cpp
+$(BUILD_DIR)/$(build)_%.o:$(IMGUI_FREETYPE_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
-# all: mkdir mkdir_bin mkdir_src mkdir_filters $(BUILD_DIR)/$(EXE)
-all: mkdir $(BUILD_DIR)/$(EXE) run
+#$(BUILD_DIR)/filters/%$(LIB_EXTENSION):$(FILTER_DIR)/%.cpp
+#	$(CXX) $(FILTER_FLAGS) -c -o $@ $<
+
+
+all: mkdir mkdir_filters $(DLL_BUILD_FILTER_FILES) $(BUILD_DIR)/$(EXE) run
 	@echo $(build) build complete
 
 $(BUILD_DIR)/$(EXE): $(OBJS)
@@ -178,22 +180,16 @@ mkdir:
 run:
 	./$(BUILD_DIR)/$(EXE)
 
-# cp:
-# 	cp assets/MyImage01.jpg $(BUILD_DIR)
+mkdir_filters: mkdir
+	mkdir -p $(BUILD_DIR)/filters
 
-# mkdir_bin: mkdir
-# 	mkdir -p $(BUILD_DIR)/bin
-# 	cp $(LUAJIT_DIR)/lfs.dll $(BUILD_DIR)/bin/
-# 	cp $(LUAJIT_DIR)/lua51.dll $(BUILD_DIR)/bin/
-# 	cp $(LUAJIT_DIR)/liblua51.dll.a $(BUILD_DIR)/bin/
 
-# mkdir_src: mkdir
-# 	mkdir -p $(BUILD_DIR)/src
-# 	cp infinitefilter/src/filter_runner.lua $(BUILD_DIR)/src/
 
-# mkdir_filters: mkdir
-# 	mkdir -p $(BUILD_DIR)/filters
-# 	cp $(FILTER_FILES) $(BUILD_DIR)/filters/
+$(DLL_BUILD_FILTER_FILES):
+	$(foreach filter,$(DLL_FILTERS), \
+		cp "$(DLL_FILTER_DIR)/$(filter)/x64/Release/$(filter).dll" \
+       "$(DLL_BUILD_FILTER_DIR)/$(filter).dll";)
+
 
 clean:
 	rm -rf $(BUILD_DIR)

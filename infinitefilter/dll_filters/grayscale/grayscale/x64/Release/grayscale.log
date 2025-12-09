@@ -1,0 +1,6 @@
+﻿     Creating library E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\grayscale\x64\Release\grayscale.lib and object E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\grayscale\x64\Release\grayscale.exp
+  Generating code
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+  All 2 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  grayscale.vcxproj -> E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\grayscale\x64\Release\grayscale.dll
