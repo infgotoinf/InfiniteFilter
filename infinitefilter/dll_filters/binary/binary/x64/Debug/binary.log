@@ -1,0 +1,11 @@
+﻿  pch.cpp
+  dllmain.cpp
+  filter.cpp
+  Generating Code...
+E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\binary\binary\filter.cpp(5,6): warning C4273: 'filter': inconsistent dll linkage
+  (compiling source file '/filter.cpp')
+      E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\binary\binary\filter.h(9,28):
+      see previous definition of 'filter'
+  
+     Creating library E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\binary\x64\Debug\binary.lib and object E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\binary\x64\Debug\binary.exp
+  binary.vcxproj -> E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\binary\x64\Debug\binary.dll

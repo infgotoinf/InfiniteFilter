@@ -1,4 +1,4 @@
-#define DEVELOPER_OPTIONS // Disable this for a release
+//#define DEVELOPER_OPTIONS // Disable this for a release
 
 #include <string>
 
@@ -21,6 +21,69 @@
 //=================================================================================================
 //      START OF THE MAIN CODE
 //=================================================================================================
+
+void applyFilterStack(uint8_t** img_data, uint8_t* img_data_copy, int img_width, int img_height
+                    , int img_channels, SDL_Renderer* renderer, SDL_Texture** texture)
+{
+    size_t data_size = static_cast<size_t>(img_width) * img_height * img_channels;
+    *img_data = nullptr;
+    *img_data = new uint8_t[data_size];
+    memcpy(*img_data, img_data_copy, static_cast<size_t>(img_width) * img_height * img_channels);
+    if (!filter_stack_vec.empty() & filter_stack_vec != old_filter_stack_vec)
+    {
+    for (std::string &filter : filter_stack_vec)
+        {
+            filterImage(*img_data, img_width, img_height, img_channels
+                       , filter.substr(0, filter.find("#")).c_str(), renderer, texture);
+        }
+    }
+    else if (filter_stack_vec.empty())
+    {
+        if (*texture != nullptr) {
+            SDL_DestroyTexture(*texture);
+            *texture = nullptr;
+        }
+
+        SDL_Surface* surface = SDL_CreateRGBSurface(0, img_width, img_height, 
+                                                   img_channels * 8,
+                                                   0x000000ff, 0x0000ff00, 
+                                                   0x00ff0000, 0xff000000);
+        
+        if (surface == nullptr)
+        {
+            fprintf(stderr, "Failed to create SDL surface: %s\n", SDL_GetError());
+            return;
+        }
+
+        if (SDL_MUSTLOCK(surface)) {
+            SDL_LockSurface(surface);
+        }
+        
+        uint8_t* dst = static_cast<uint8_t*>(surface->pixels);
+        uint8_t* src = *img_data;
+        int src_pitch = img_channels * img_width;  // Our pitch
+        int dst_pitch = surface->pitch;           // SDL's pitch
+        
+        for (int y = 0; y < img_height; y++) {
+            memcpy(dst, src, src_pitch);
+            dst += dst_pitch;
+            src += src_pitch;
+        }
+        
+        if (SDL_MUSTLOCK(surface)) {
+            SDL_UnlockSurface(surface);
+        }
+
+        *texture = SDL_CreateTextureFromSurface(renderer, surface);
+        if (*texture == nullptr)
+        {
+            fprintf(stderr, "Failed to create SDL texture: %s\n", SDL_GetError());
+        }
+
+        SDL_FreeSurface(surface);
+    }
+    old_filter_stack_vec = filter_stack_vec;
+}
 
 int main(int, char**)
 {
@@ -166,12 +229,16 @@ int main(int, char**)
     std::string filename = u8"assets/MyImage01.jpg";
     SDL_Texture* texture;
     uint8_t* img_data = nullptr;
+    uint8_t* img_data_copy;
     int img_width, img_height, img_channels = 3;
     bool ret = loadTextureFromFile(filename.c_str(), &img_data, renderer, &texture
                                  , &img_width, &img_height, &img_channels);
     if (ret && img_data != nullptr)
     {
         printf("Image loaded successfully! Channels: %d\n", img_channels);
+        size_t data_size = static_cast<size_t>(img_width) * img_height * img_channels;
+        img_data_copy = new uint8_t[data_size];
+        memcpy(img_data_copy, img_data, data_size);
     }
     else
     {
@@ -267,12 +334,6 @@ int main(int, char**)
                              , renderer, &texture, filter_name_vec);
                 ImGui::EndMenu();
             }
-            // Settings menu
-            if (ImGui::BeginMenu("Settings"))
-            {
-                showSettingsMenu();
-                ImGui::EndMenu();
-            }
             // Help menu
             if (ImGui::BeginMenu("Help"))
             {
@@ -289,18 +350,29 @@ int main(int, char**)
         // ImGui::BeginGroup();
         // Leave room for 1 line below us
         // ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
+        static int selected = 0;
+
+        if ((ImGui::IsKeyPressed(ImGuiKey_Delete) | ImGui::IsKeyPressed(ImGuiKey_Backspace))
+           & !filter_stack_vec.empty())
+        {
+            filter_stack_vec.erase(filter_stack_vec.begin() + selected);
+            applyFilterStack(&img_data, img_data_copy, img_width, img_height
+                            , img_channels, renderer, &texture);
+        }
+
         if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
         {
             if (ImGui::BeginTabItem("Import"))
             {
-                importGui(&filename, img_data, &img_width, &img_height, &texture, renderer
-                        , display_width, display_height);
+                importGui(&filename, &img_data_copy, &img_width, &img_height, &img_channels
+                        , &texture, renderer, display_width, display_height);
+                applyFilterStack(&img_data, img_data_copy, img_width, img_height
+                                , img_channels, renderer, &texture);
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Filter"))
             {
                 //Left
-                static int selected = 0;
                 {
                     ImGui::BeginChild("left pane", ImVec2(150, 0), ImGuiChildFlags_Borders
                                                                  | ImGuiChildFlags_ResizeX);
@@ -311,6 +383,7 @@ int main(int, char**)
                                               ImGuiSelectableFlags_SelectOnNav))
                         {
                             selected = i;
+                            printf("Selected element: %i\n", selected);
                         }
                         if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
                         {
@@ -318,6 +391,8 @@ int main(int, char**)
                             if (n_next >= 0 && n_next < filter_stack_vec.size())
                             {
                                 std::swap(filter_stack_vec[i], filter_stack_vec[n_next]);
+                                applyFilterStack(&img_data, img_data_copy, img_width, img_height
+                                                , img_channels, renderer, &texture);
                                 ImGui::ResetMouseDragDelta();
                             }
                         }
@@ -443,8 +518,12 @@ int main(int, char**)
             }
             if (ImGui::BeginTabItem("Export"))
             {
-                const char* c_filename = filename.c_str();
-                exportGui(c_filename, img_data, &img_width, &img_height, texture, renderer);
+                exportGui(filename, img_data, &img_width, &img_height, img_channels
+                        , texture, renderer);
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Settings"))
+            {
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
@@ -466,14 +545,6 @@ int main(int, char**)
             ImGui::ShowDemoWindow(&show_demo_window);
     #endif
 
-        if (show_fd_window)
-            importGui(&filename, img_data, &img_width, &img_height, &texture, renderer
-                    , display_width, display_height);
-
-        if (show_config_window)
-        { // Configuratuion window
-            ImGui::Begin("Configuration", &show_config_window, ImGuiWindowFlags_AlwaysAutoResize);
-        }
         if (show_credits_window)
         { // Credits window
             ImGui::Begin("Credits", &show_credits_window, ImGuiWindowFlags_AlwaysAutoResize);

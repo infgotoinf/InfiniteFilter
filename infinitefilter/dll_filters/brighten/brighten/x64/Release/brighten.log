@@ -1,0 +1,18 @@
+﻿  pch.cpp
+  dllmain.cpp
+  filter.cpp
+E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\brighten\brighten\filter.cpp(12,30): warning C4244: 'initializing': conversion from 'double' to 'uint8_t', possible loss of data
+  (compiling source file '/filter.cpp')
+  
+E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\brighten\brighten\filter.cpp(13,30): warning C4244: 'initializing': conversion from 'double' to 'uint8_t', possible loss of data
+  (compiling source file '/filter.cpp')
+  
+E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\brighten\brighten\filter.cpp(14,30): warning C4244: 'initializing': conversion from 'double' to 'uint8_t', possible loss of data
+  (compiling source file '/filter.cpp')
+  
+     Creating library E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\brighten\x64\Release\brighten.lib and object E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\brighten\x64\Release\brighten.exp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 2 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  brighten.vcxproj -> E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\brighten\x64\Release\brighten.dll
