@@ -1,6 +1,0 @@
-﻿  pch.cpp
-  dllmain.cpp
-  filter.cpp
-  Generating Code...
-     Creating library E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\grayscale\x64\Debug\grayscale.lib and object E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\grayscale\x64\Debug\grayscale.exp
-  grayscale.vcxproj -> E:\PROGRAMMIING\InfiniteFilter\infinitefilter\dll_filters\grayscale\x64\Debug\grayscale.dll
