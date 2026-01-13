@@ -62,43 +62,67 @@ OBJS    := $(SOURCES:%=$(BUILD_DIR)/$(build)_%.o)
 
 
 FILTERS  := $(shell find $(FILTER_DIR) -name '*.cpp')
-FILTERS  := $(basename $(notdir $(FILTERS)))
 
+FILTERS   := $(basename $(notdir $(FILTERS)))
+LIB_OBJS  := $(FILTERS:%=$(BUILD_DIR)/filters/$(build)_%.a)
 
-DLL_FILTER_DIR = $(PROJECT_DIR)/dll_filters
-DLL_FILTERS   := $(shell ls $(DLL_FILTER_DIR))
+##-------------------------------------------------------------------------------------------------
+##                                        FLAGS
+##-------------------------------------------------------------------------------------------------
 
-DLL_BUILD_FILTER_DIR = $(BUILD_DIR)/filters
-DLL_BUILD_FILTER_FILES = \
-    $(foreach filter,$(DLL_FILTERS), \
-    $(DLL_BUILD_FILTER_DIR)/$(filter).dll)
+CXXFLAGS = -std=c++17
 
+CXXHEADERS = -I$(INCLUDE_DIR) \
+             -I$(IMGUI_DIR) \
+             -I$(IMGUI_FREETYPE_DIR) \
+             -I$(IMGUI_FD_DIR) \
+             -I$(WIN_SDL2_DIR) \
+             -I$(WIN_FREETYPE_DIR) \
+			 -I$(STB_DIR)
 
-CXXFLAGS = -std=c++17 \
-           -I$(INCLUDE_DIR) \
-           -I$(IMGUI_DIR) \
-           -I$(IMGUI_FREETYPE_DIR) \
-           -I$(IMGUI_FD_DIR) \
-           -I$(STB_DIR) \
-           -I$(WIN_SDL2_DIR) \
-           -I$(WIN_FREETYPE_DIR)
+    # Warnings
+RELEASE_CXXFLAGS = -Wall \
+                   -Werror=return-type \
+                   -Werror=uninitialized
 
-RELEASE_CXXFLAGS = -g0 -O3 -Wall -Wextra -pedantic -flto
-                   # -w -DNDEBUG -fno-rtti -fno-exceptions \
-                   # -ffunction-sections -fdata-sections -Wl,--gc-sections \
-                   # -fvisibility=hidden -fomit-frame-pointer -funroll-loops \
-                   # -fstrict-aliasing -fipa-pta -ftree-vectorize \
-                   # -fno-semantic-interposition -Wl,-O3 -Wl,--relax \
-                   # -Wl,--strip-all -mfpmath=both -mbranch-cost=2 \
-                   # -fno-stack-protector -fno-unwind-tables
-                   # There are hell-a-lot-of stuff
+    # Debug
+RELEASE_CXXFLAGS += -DNDEBUG # turn off debug stuff like asserts
+RELEASE_CXXFLAGS += -g0 # turn off debugability of app
+
+    # Optimisations
+RELEASE_CXXFLAGS += -O3 # based optimisation
+#RELEASE_CXXFLAGS += -flto # Link Time Optimization (based)
+RELEASE_CXXFLAGS += -fopenmp # to use '#pragma omp parallel for'
+RELEASE_CXXFLAGS += -funroll-loops # Loop Unrolling
+
+    # Math simplification
+RELEASE_CXXFLAGS += -mfma # Fused Multiply-Add
+RELEASE_CXXFLAGS += -ffast-math # fast math
+
+    # Turning off things
+RELEASE_CXXFLAGS += -fno-rtti # turn off RTTI aka dynamic_cast and typeid
+#RELEASE_CXXFLAGS += -fno-exceptions # turn off exeptions aka try/catch
+#RELEASE_CXXFLAGS += -fno-unwind-tables
+
+    # Delete unused/excess stuff
+RELEASE_CXXFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections \
+                    -Wl,--strip-all
+
+    # Other
+RELEASE_CXXFLAGS += -fvisibility=hidden # speeds up DLL load speed
+
+    # !!!
+RELEASE_CXXFLAGS += -march=x86-64-v3
+
+# TODO: figure out with them
+ARCH_FLAGS = -march=native -march=x86-64-v3 -march=x86-64
 
 DEBUG_CXXFLAGS = -g -g3 -Og -Wall -Wextra -pedantic
 
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreetype -lpng -lharfbuzz -lgraphite2 \
           -ldwrite -lbrotlidec -lbrotlicommon -lbz2 -lz -lusp10 -lrpcrt4 \
           -Wl,--dynamicbase -Wl,--nxcompat \
-          -static-libstdc++ -static-libgcc -static -lwinpthread -lsetupapi -lhid \
+          -static-libstdc++ -static-libgcc -lwinpthread -lsetupapi -lhid \
           -lwinmm -limm32 -lshell32 -lole32 -loleaut32 -luuid -lversion -msse2
 
 ##---------------------------------------------------------------------------------
@@ -121,12 +145,11 @@ endif
 ifeq ($(OS),Windows_NT)
     CXX      = x86_64-w64-mingw32-g++
     PLATFORM = windows
-    FILTER_FLAGS  = -static-libgcc -static-libstdc++
     LIB_EXTENSION = .dll
-    LIB_OBJS := $(FILTERS:%=$(BUILD_DIR)/filters/%.dll)
-else
     FILTER_FLAGS  = -shared -fPIC
+else
     LIB_EXTENSION = .so
+    FILTER_FLAGS  = -shared -fPIC
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
         CXX = g++
@@ -137,6 +160,8 @@ else
         PLATFORM = macos
     endif
 endif
+
+LIB_FILES := $(FILTERS:%=$(BUILD_DIR)/filters/$(build)_%$(LIB_EXTENSION))
 
 ifeq ($(PLATFORM),windows)
   LDFLAGS += -mwindows  # Hide console window
@@ -151,45 +176,46 @@ endif
 ##---------------------------------------------------------------------------------
 
 $(BUILD_DIR)/$(build)_%.o:$(PROJECT_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(CXXHEADERS) -c -o $@ $<
 
 $(BUILD_DIR)/$(build)_%.o:$(IMGUI_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(CXXHEADERS) -c -o $@ $<
 
 $(BUILD_DIR)/$(build)_%.o:$(IMGUI_FD_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(CXXHEADERS) -c -o $@ $<
 
 $(BUILD_DIR)/$(build)_%.o:$(IMGUI_FREETYPE_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(CXXHEADERS) -c -o $@ $<
 
 
-#$(BUILD_DIR)/filters/%$(LIB_EXTENSION):$(FILTER_DIR)/%.cpp
-#	$(CXX) $(FILTER_FLAGS) -c -o $@ $<
+$(BUILD_DIR)/filters/$(build)_%.a:$(FILTER_DIR)/%.cpp
+	$(CXX) $(FILTER_FLAGS) $(CXXFLAGS) -c -o $@ $<
 
 
-all: mkdir mkdir_filters $(DLL_BUILD_FILTER_FILES) $(BUILD_DIR)/$(EXE) run
+all: mkdir mkdir_filters $(LIB_FILES) $(BUILD_DIR)/$(EXE) run
 	@echo $(build) build complete
+
 
 $(BUILD_DIR)/$(EXE): $(OBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS)
+
+$(BUILD_DIR)/filters/$(build)_%$(LIB_EXTENSION): $(BUILD_DIR)/filters/$(build)_%.a
+	$(CXX) $(CXXFLAGS) $(FILTER_FLAGS) -o $@ $<
 
 
 mkdir:
 	mkdir -p $(BUILD_DIR)
 
 run:
-	./$(BUILD_DIR)/$(EXE)
+	$(BUILD_DIR)/$(EXE)
 
 mkdir_filters: mkdir
 	mkdir -p $(BUILD_DIR)/filters
 
 
-
-$(DLL_BUILD_FILTER_FILES):
-	$(foreach filter,$(DLL_FILTERS), \
-		cp "$(DLL_FILTER_DIR)/$(filter)/x64/Release/$(filter).dll" \
-       "$(DLL_BUILD_FILTER_DIR)/$(filter).dll";)
-
-
 clean:
 	rm -rf $(BUILD_DIR)
+
+clean_filters:
+	rm -rf $(BUILD_DIR)/filters
+
